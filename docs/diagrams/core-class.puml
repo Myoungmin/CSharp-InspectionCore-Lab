@@ -1,0 +1,36 @@
+@startuml core-class
+!pragma layout smetana
+title Core contracts and borrowed dependencies
+class InspectionJob {
+  JobId
+  Samples (read-only snapshot)
+  LowerBound / UpperBound
+}
+class InspectionResult {
+  RunId / JobId
+  StartedAtUtc / InspectedAtUtc
+}
+class InspectionAssessment {
+  SampleCount / DefectCount
+  Score / Verdict
+}
+class InspectionRunner {
+  RunAsync(job, cancellationToken)
+}
+interface IDevice {
+  PrepareAsync(job, token)
+  AcquireAsync(job, token)
+}
+interface IInspector {
+  InspectAsync(job, samples, token)
+}
+interface IResultStore {
+  SaveAsync(result, token)
+}
+InspectionRunner --> IDevice : borrows
+InspectionRunner --> IInspector : borrows
+InspectionRunner --> IResultStore : borrows
+InspectionRunner ..> InspectionJob
+InspectionRunner ..> InspectionResult
+InspectionResult --> InspectionAssessment : immutable value
+@enduml

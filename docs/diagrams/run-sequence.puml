@@ -1,0 +1,29 @@
+@startuml run-sequence
+title M1 successful inspection and persistence boundary
+actor User
+participant Host
+participant InspectionRunner as Runner
+participant IDevice as Device
+participant IInspector as Inspector
+participant IResultStore as Store
+User -> Host : run pass or fail scenario
+Host -> Runner : RunAsync(job, token)
+Runner -> Runner : create RunId
+Runner -> Device : PrepareAsync(job, token)
+Device --> Runner : ready
+Runner -> Device : AcquireAsync(job, token)
+Device --> Runner : samples
+Runner -> Inspector : InspectAsync(job, samples, token)
+Inspector --> Runner : assessment (Pass or Fail)
+Runner -> Runner : atomically enter persistence
+note right of Runner : cancellation accepted before this point prevents saving
+Runner -> Store : SaveAsync(result, CancellationToken.None)
+Store -> Store : write temporary file, then rename
+Store --> Runner : persisted
+Runner --> Host : InspectionResult
+Host --> User : Succeeded + RunId + verdict + result path
+note over Runner, Store
+Late caller cancellation cannot replace storage outcome.
+Save failure throws InspectionRunException with the computed result.
+end note
+@enduml

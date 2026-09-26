@@ -1,0 +1,20 @@
+@startuml architecture
+!pragma layout smetana
+title M1 runtime responsibilities (one console process)
+skinparam componentStyle rectangle
+component "Host\ncreates dependencies" as Host
+component "Core\nInspectionRunner" as Core
+component "Infrastructure\nSimulatedDevice" as Device
+component "Infrastructure\nRangeInspector" as Inspector
+component "Infrastructure\nJsonResultStore" as Store
+database "RunId.json" as Result
+Host --> Core : RunAsync
+Core --> Device : IDevice
+Core --> Inspector : IInspector
+Core --> Store : IResultStore
+Store --> Result : publish after write
+note bottom of Core
+Calls ports declared by Core.
+No dependency on adapter assemblies.
+end note
+@enduml

@@ -1,0 +1,13 @@
+@startuml
+!pragma layout smetana
+title Evaluated project references (Release / x64)
+skinparam componentStyle rectangle
+component "Inspection.Core" as Inspection_Core
+component "Inspection.Host" as Inspection_Host
+component "Inspection.Infrastructure" as Inspection_Infrastructure
+component "Inspection.Tests" as Inspection_Tests
+Inspection_Host --> Inspection_Core
+Inspection_Host --> Inspection_Infrastructure
+Inspection_Infrastructure --> Inspection_Core
+Inspection_Tests --> Inspection_Core
+@enduml

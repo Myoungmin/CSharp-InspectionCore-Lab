@@ -1,7 +1,8 @@
 # ADR-0007: 종료 원인 접수와 실제 완료를 분리하고 같은 잠금으로 판정한다
 
 - Date: 2026-09-27
-- Status: Accepted
+- Status: Superseded
+- Superseded by: [ADR-0009](0009-termination-failure-quarantine.md). 최초 원인·저장 경계·정상 종료 대기는 유지하며 종료 실패 규칙을 확장한다.
 
 ## Context
 

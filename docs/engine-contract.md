@@ -1,6 +1,6 @@
-# M3a Engine 계약
+# M3b Engine 계약
 
-InspectionEngine은 단일 실행 접수·상태·취소·시간 제한을 관리한다. Inspector와 장비는 Core 포트로 빌려 쓰며 Host가 소유한다. 결정의 배경은 [ADR-0006](adr/0006-single-run-engine.md)과 [ADR-0007](adr/0007-stop-and-completion-arbitration.md)에 있다.
+InspectionEngine은 단일 실행 접수·상태·취소·시간 제한을 관리한다. Inspector와 장비는 Core 포트로 빌려 쓰며 Host가 소유한다. 결정의 배경은 [ADR-0006](adr/0006-single-run-engine.md)과 [ADR-0009](adr/0009-termination-failure-quarantine.md)에 있다. 0009는 M3a의 0007을 확장·대체한다.
 
 ## 접수와 조회
 
@@ -25,10 +25,11 @@ InspectionEngine은 단일 실행 접수·상태·취소·시간 제한을 관�
 | 저장 성공, 종료 처리 성공 | Succeeded, 제품 Fail도 포함 |
 | 먼저 접수된 종료 원인 없이 실행·저장 실패 | 실행 Faulted, 엔진은 다시 접수 가능 |
 | 취소 콜백·타이머 정리 실패 | 실행 및 엔진 Faulted, 새 접수 거절 |
+| 의존성 종료 프로토콜 실패 | 접수된 종료 원인보다 우선해 실행·엔진 Faulted. 원인은 보존하고 새 접수 거절 |
 
 원인 접수와 저장 진입은 같은 잠금에서 판단한다. 먼저 접수된 원인이 있으면 저장 진입을 막는다. 원인이 없는 실행이 Persisting에 먼저 들어가면 이후 취소나 시간 초과가 저장 결과를 변경하지 않는다. 저장소에는 취소되지 않는 토큰을 전달한다.
 
-Runner가 실제로 반환하면 완료 판정 구간을 닫는다. 그 전에 접수된 원인이 있으면 해당 종료 상태를 유지하고, 동시에 발생한 실행 오류도 Error에 남긴다. ComputedResult는 저장 성공을 뜻하지 않으며 계산이 끝났다면 진단용으로 보존한다. 성공 여부는 반드시 State로 판단한다. StopError는 취소 콜백·타이머 정리 실패다.
+Runner가 실제로 반환하면 완료 판정 구간을 닫는다. 그 전에 접수된 원인이 있으면 해당 종료 상태를 유지하고, 동시에 발생한 일반 실행 오류도 Error에 남긴다. 단, InspectionTerminationException은 종료 원인보다 우선하여 Faulted로 판정하고 Engine.Error에도 남긴다. ComputedResult는 저장 성공을 뜻하지 않으며 계산이 끝났다면 진단용으로 보존한다. 성공 여부는 반드시 State로 판단한다. StopError는 취소 콜백·타이머 정리 실패다.
 
 시간 제한은 접수 시 시작한다. null 또는 InfiniteTimeSpan은 무제한, 0은 장비 호출 전 즉시 Timeout 요청이다. 유한 범위는 0~4294967294ms이며 Host는 정수 ms를 받는다. 일회성 TimeProvider 타이머를 사용하고 테스트에서는 실제 시간을 기다리지 않고 시간을 전진시킨다. 이전 타이머 콜백은 실행 객체를 확인하므로 새 실행을 취소하지 못한다.
 
@@ -38,11 +39,11 @@ Runner가 실제로 반환하면 완료 판정 구간을 닫는다. 그 전에 �
 
 Engine은 내부 CancellationTokenSource와 타이머를 소유한다. CancelAsync는 토큰을 즉시 취소 상태로 만들고 콜백을 비동기로 전달한다. Engine은 Runner 반환과 콜백 종료·타이머 정리를 모두 마친 뒤 완료 Task를 확정하고 실행 자리를 비운다. 단순 대기 취소로 실행 자리를 반환하지 않는다.
 
-장비·검사기 포트의 Task 완료는 해당 작업이 실제로 끝났다는 뜻이어야 한다. 어댑터가 사용 중인 버퍼나 백그라운드 작업을 남긴 채 Task를 먼저 완료하면 Engine은 실제 종료를 판단할 수 없다. M3b 어댑터도 이 계약을 충족해야 한다.
+장비·검사기 포트의 Task 완료는 해당 작업이 실제로 끝났다는 뜻이어야 한다. 어댑터가 사용 중인 버퍼나 백그라운드 작업을 남긴 채 Task를 먼저 완료하면 Engine은 실제 종료를 판단할 수 없다. Native 어댑터도 정상 경로에서는 Wait로 작업·콜백 종료를 확인한다. 예외는 Wait 자체의 실패다. 이때 TerminationConfirmed=false와 Faulted를 반환하며 Native 자원을 프로세스 종료까지 보존한다. Completion/CompletedAtUtc는 관리 측 장애 판정 완료이고 실제 Native 종료는 미확인이다. IsBusy=false여도 Faulted 엔진은 영구적으로 접수를 거절한다. 진행 중 TerminationConfirmed는 null, 종료 확인 후에는 true다.
 
 DisposeAsync는 신규 접수를 차단하고 현재 실행에 Shutdown을 요청한 뒤 완료를 기다린다. 이미 Persisting이면 저장 결과를 기다린다. 반복 Dispose는 같은 종료를 관찰하며 주입된 Runner·장비·검사기·저장소를 해제하지 않는다. Host는 Engine 종료를 기다린 후 자신이 만든 NativeInspector를 해제한다.
 
-현재 Native 호출은 M2의 동기 API다. Engine의 ThreadPool 실행은 호출자가 접수·취소 API를 사용할 수 있게 하지만 실제 Native 중단을 제공하지 않는다. 비협조적 작업이 끝나지 않으면 Busy와 Dispose 대기도 유지된다. Native 작업·Native 진행 콜백의 중단·종료 보장은 M3b에서 추가한다. 여기서 검증한 콜백은 관리 토큰 콜백이다.
+NativeInspector는 Start/RequestStop/Wait를 사용한다. 취소된 토큰은 협조적 정지만 요청하고 실제 종료·콜백 반환은 Wait가 확인한다. 정지 실패 후에도 Wait를 기다리고 종료 확인 후 Faulted를 반환한다. Wait가 반환하지 않으면 Busy와 Dispose 대기가 유지된다. Wait 오류가 반환되면 위의 자원 보존 경로를 적용한다. 종료 실패 엔진은 Dispose 후에도 Faulted를 유지한다. Native 진행 관찰자는 자기 작업의 완료를 동기로 기다리면 안 된다.
 
 ## 호출 예
 

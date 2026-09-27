@@ -11,7 +11,7 @@ $powershell = Join-Path $PSHOME 'powershell.exe'
 $verificationId = [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssZ') + '-' + [Guid]::NewGuid().ToString('N').Substring(0, 8)
 $outputDir = Join-Path $repoRoot "artifacts/verification/$verificationId"
 New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
-$summary = [ordered]@{ milestone = 'M3a'; verificationId = $verificationId; status = 'Failed'; baselineCommit = $null; sourceHash = $null; nativeDllHash = $null; testsPassed = 0; integrationTestsPassed = 0; nativeTestsPassed = 0; smokeCases = @(); steps = @(); error = $null }
+$summary = [ordered]@{ milestone = 'M3b'; verificationId = $verificationId; status = 'Failed'; baselineCommit = $null; sourceHash = $null; nativeDllHash = $null; testsPassed = 0; integrationTestsPassed = 0; nativeTestsPassed = 0; smokeCases = @(); steps = @(); error = $null }
 
 function Get-SourceSnapshot {
     $paths = @(& git -C $repoRoot -c core.quotepath=false ls-files --cached --others --exclude-standard | Sort-Object -Unique)
@@ -65,9 +65,9 @@ try {
     [xml]$trx = [IO.File]::ReadAllText($trxPath)
     $counters = $trx.TestRun.ResultSummary.Counters
     $testResults = @($trx.TestRun.Results.UnitTestResult)
-    if ([int]$counters.total -lt 44 -or [int]$counters.executed -ne [int]$counters.total -or
+    if ([int]$counters.total -lt 52 -or [int]$counters.executed -ne [int]$counters.total -or
         [int]$counters.passed -ne [int]$counters.total -or @($testResults | Where-Object { $_.outcome -ne 'Passed' }).Count -gt 0) {
-        throw 'M3a requires at least 44 executed, passing Core tests (19 existing + 25 engine), with no skipped or failed results.'
+        throw 'M3b requires at least 52 executed, passing Core tests (44 existing + 8 termination failure cases), with no skipped or failed results.'
     }
     $summary.testsPassed = [int]$counters.passed
 
@@ -78,14 +78,14 @@ try {
     [xml]$integrationTrx = [IO.File]::ReadAllText($integrationTrxPath)
     $integrationCounters = $integrationTrx.TestRun.ResultSummary.Counters
     $integrationResults = @($integrationTrx.TestRun.Results.UnitTestResult)
-    if ([int]$integrationCounters.total -lt 23 -or [int]$integrationCounters.executed -ne [int]$integrationCounters.total -or
+    if ([int]$integrationCounters.total -lt 35 -or [int]$integrationCounters.executed -ne [int]$integrationCounters.total -or
         [int]$integrationCounters.passed -ne [int]$integrationCounters.total -or $integrationResults.Count -ne [int]$integrationCounters.total -or
         @($integrationResults | Where-Object { $_.outcome -ne 'Passed' }).Count -gt 0) {
-        throw 'M2 requires at least 23 integration tests, all executed and passing; skip is not permitted.'
+        throw 'M3b requires at least 35 integration tests, all executed and passing; skip is not permitted.'
     }
-    $nativeTestIds = @($integrationTrx.TestRun.TestDefinitions.UnitTest | Where-Object { $_.TestMethod.className -like 'Inspection.IntegrationTests.NativeInspectorTests*' } | ForEach-Object { $_.id })
+    $nativeTestIds = @($integrationTrx.TestRun.TestDefinitions.UnitTest | Where-Object { $_.TestMethod.className -in @('Inspection.IntegrationTests.NativeInspectorTests', 'Inspection.IntegrationTests.NativeLifetimeTests') } | ForEach-Object { $_.id })
     $nativeResults = @($integrationResults | Where-Object { $_.testId -in $nativeTestIds })
-    if ($nativeResults.Count -lt 20) { throw 'The 20 mandatory actual-DLL test cases were not executed.' }
+    if ($nativeResults.Count -lt 32) { throw 'The 32 mandatory actual-DLL test cases were not executed.' }
     $summary.integrationTestsPassed = [int]$integrationCounters.passed
     $summary.nativeTestsPassed = $nativeResults.Count
     $null = Invoke-Step 'required-test-cases' $powershell @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $PSScriptRoot 'check-required-tests.ps1'), '-CoreTrx', $trxPath, '-IntegrationTrx', $integrationTrxPath)
@@ -102,6 +102,13 @@ try {
         $hostResult = Invoke-Step "host-$index-$inspector-$scenario" $dotnet @($hostDll, '--scenario', $scenario, '--inspector', $inspector, '--output', $resultDir) -TimeoutSeconds 30
         $runMatch = [regex]::Match($hostResult.Stdout, 'RunId=([0-9a-fA-F-]{36})')
         if (-not $runMatch.Success -or $hostResult.Stdout -notmatch 'Status=Succeeded' -or $hostResult.Stdout -notmatch "Inspector=$inspector") { throw 'Host did not report a successful run with RunId and the selected inspector.' }
+        if ($inspector -eq 'native') {
+            $progressMatches = @([regex]::Matches($hostResult.Stdout, '(?m)^NativeProgress=(\d+)/4\r?$'))
+            $progress = @($progressMatches | ForEach-Object { $_.Groups[1].Value })
+            if (($progress -join ',') -cne '0,1,2,3,4' -or $progressMatches[-1].Index -gt $runMatch.Index) {
+                throw 'Native Host progress must be ordered and complete before reporting success.'
+            }
+        }
         $runId = [Guid]::Parse($runMatch.Groups[1].Value)
         if ($runId -eq [Guid]::Empty -or $runId -in $seenIds) { throw 'RunId must be nonempty and unique.' }
         $seenIds += $runId

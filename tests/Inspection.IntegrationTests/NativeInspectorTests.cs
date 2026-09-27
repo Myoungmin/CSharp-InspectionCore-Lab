@@ -19,7 +19,7 @@ public sealed class NativeInspectorTests
         using var stream = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "NativeInspection.dll"));
         using var reader = new PEReader(stream);
         Assert.AreEqual(Machine.Amd64, reader.PEHeaders.CoffHeader.Machine);
-        Assert.AreEqual(1u, NativeMethods.AbiVersion());
+        Assert.AreEqual(2u, NativeMethods.AbiVersion());
         Assert.AreEqual(16u, NativeMethods.ResultSize());
         Assert.AreEqual(16, Marshal.SizeOf<NativeInspectionResult>());
         Assert.AreEqual((nint)0, Marshal.OffsetOf<NativeInspectionResult>(nameof(NativeInspectionResult.SampleCount)));

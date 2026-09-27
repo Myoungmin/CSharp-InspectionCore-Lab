@@ -1,46 +1,50 @@
 @startuml cancel-shutdown-sequence
-title M3a stop request, actual return and Host-owned disposal
+title M3b stop request, native join and Host-owned disposal
 actor User
 participant Host
 participant InspectionEngine as Engine
 participant InspectionRunner as Runner
-participant IInspector as Inspector
-participant CancellationTokenSource as CTS
-participant "Token callbacks" as Callbacks
-participant "Timeout timer" as Timer
+participant NativeInspector as Inspector
+participant "Native DLL / worker" as DLL
+participant "Progress observer" as Observer
 Runner -> Inspector : InspectAsync(job, samples, token)
+Inspector -> Inspector : copy input / retain handle / root callback context
+Inspector -> DLL : Start(samples, callback, context)
+DLL --> Inspector : copied / started
+Inspector -> DLL : Wait (dedicated waiter)
+DLL -> Observer : callback through managed trampoline
 User -> Engine : CancelRun(runId)
-Engine -> Engine : first reason wins shared lock / CancelRequested
-Engine -> CTS : CancelAsync()
-CTS --> Engine : delivery task (token already canceled)
-CTS ->> Callbacks : dispatch registered callbacks
+Engine -> Engine : first reason wins lock / CancelRequested
+Engine ->> Inspector : token callback dispatch -> RequestStop
+Inspector -> DLL : RequestStop (does not wait)
+DLL --> Inspector : stop requested (or stop error)
 Engine --> User : Accepted (still Busy)
-note over Inspector, Callbacks
-M2 native inspection is synchronous and returns on its own.
-Token cancellation is not native stop completion.
-end note
-Inspector --> Runner : actual return (result or exception)
-opt assessment returned
-Runner -> Engine : persistence boundary if result returned
-Engine --> Runner : reject persistence when stop already accepted
+Observer --> DLL : callback returns
+DLL -> Inspector : possible late progress
+Inspector --> DLL : suppress observer delivery after stop
+alt Wait succeeds
+DLL --> Inspector : worker joined / operation status + result
+Inspector -> Inspector : unregister token / release context and extra handle reference
+Inspector --> Runner : canceled, or termination error if stop failed
+else Wait fails (termination unconfirmed)
+DLL --> Inspector : Wait error
+Inspector -> Inspector : retain context and handle reference until process exit
+Inspector --> Runner : termination error (confirmed=false)
 end
-Runner --> Engine : actual runner return / error
-Engine -> Engine : close completion arbitration
-Engine -> CTS : await callback delivery
-Callbacks --> CTS : callbacks finished
-CTS --> Engine : complete (or callback error)
-Engine -> Timer : await DisposeAsync()
-Engine -> CTS : Dispose()
-Engine -> Engine : finalize Canceled/TimedOut (or Faulted)
-Engine -> Engine : release slot / complete handle
-Engine --> Host : completed snapshot
+Runner --> Engine : runner error
+Engine -> Engine : close arbitration / await token callbacks / dispose timer and CTS
+Engine -> Engine : Canceled or TimedOut; termination error overrides as Faulted
+Engine --> Host : completed snapshot (includes TerminationConfirmed)
 Host -> Engine : await DisposeAsync()
-Engine --> Host : Disposed
-Host -> Inspector : Dispose owned adapter
+Engine --> Host : Disposed, or remain Faulted
+Host -> Inspector : await DisposeAsync()
+opt termination confirmed
+Inspector -> DLL : Destroy via SafeHandle
+end
 note over Host, Engine
-If Host disposes during a run: close new admission,
-request Shutdown, then wait for the same completion.
-Persisting rejects late stop requests and must finish saving.
-Native Start/RequestStop/Wait and native callbacks arrive in M3b.
+Host shutdown closes admission and requests Shutdown before waiting.
+Persistence already entered must finish saving.
+Termination failure permanently blocks admission.
+Unconfirmed Wait completion means managed failure arbitration, not native termination.
 end note
 @enduml

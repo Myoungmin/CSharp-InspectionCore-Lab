@@ -527,6 +527,126 @@
                                        ],
                              "source":  "tests/Inspection.Tests/InspectionEngineTests.cs",
                              "adr":  "docs/adr/0007-stop-and-completion-arbitration.md"
+                         },
+                         {
+                             "id":  "M3B-001",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.NativeLifetimeTests",
+                             "method":  "Progress_IsOrderedRootedAndIsolatedBetweenRuns",
+                             "cases":  [
+                                           "Progress_IsOrderedRootedAndIsolatedBetweenRuns"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/NativeLifetimeTests.cs",
+                             "adr":  "docs/adr/0008-native-async-lifetime.md"
+                         },
+                         {
+                             "id":  "M3B-002",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.NativeLifetimeTests",
+                             "method":  "Cancel_WaitsForCallbackAndSuppressesLateNativeNotification",
+                             "cases":  [
+                                           "Cancel_WaitsForCallbackAndSuppressesLateNativeNotification"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/NativeLifetimeTests.cs",
+                             "adr":  "docs/adr/0008-native-async-lifetime.md"
+                         },
+                         {
+                             "id":  "M3B-003",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.NativeLifetimeTests",
+                             "method":  "DisposeDuringCallback_WaitsAndDestroysExactlyOnce",
+                             "cases":  [
+                                           "DisposeDuringCallback_WaitsAndDestroysExactlyOnce"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/NativeLifetimeTests.cs",
+                             "adr":  "docs/adr/0008-native-async-lifetime.md"
+                         },
+                         {
+                             "id":  "M3B-004",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.NativeLifetimeTests",
+                             "method":  "EngineStop_DrainsNativeCallbackBeforeCompletion",
+                             "cases":  [
+                                           "EngineStop_DrainsNativeCallbackBeforeCompletion (0,Canceled,UserCancellation)",
+                                           "EngineStop_DrainsNativeCallbackBeforeCompletion (1,TimedOut,Timeout)",
+                                           "EngineStop_DrainsNativeCallbackBeforeCompletion (2,Canceled,Shutdown)"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/NativeLifetimeTests.cs",
+                             "adr":  "docs/adr/0008-native-async-lifetime.md"
+                         },
+                         {
+                             "id":  "M3B-005",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.NativeLifetimeTests",
+                             "method":  "StopFailure_DrainsWorkThenFaultsEngineAndBlocksAdmission",
+                             "cases":  [
+                                           "StopFailure_DrainsWorkThenFaultsEngineAndBlocksAdmission"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/NativeLifetimeTests.cs",
+                             "adr":  "docs/adr/0009-termination-failure-quarantine.md"
+                         },
+                         {
+                             "id":  "M3B-006",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.NativeLifetimeTests",
+                             "method":  "WaitFailure_QuarantinesHandleAndContextEvenAfterDisposeAndGc",
+                             "cases":  [
+                                           "WaitFailure_QuarantinesHandleAndContextEvenAfterDisposeAndGc"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/NativeLifetimeTests.cs",
+                             "adr":  "docs/adr/0009-termination-failure-quarantine.md"
+                         },
+                         {
+                             "id":  "M3B-007",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.NativeLifetimeTests",
+                             "method":  "CallbackFailure_IsContainedAndJoinedBeforeReturning",
+                             "cases":  [
+                                           "CallbackFailure_IsContainedAndJoinedBeforeReturning (False)",
+                                           "CallbackFailure_IsContainedAndJoinedBeforeReturning (True)"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/NativeLifetimeTests.cs",
+                             "adr":  "docs/adr/0008-native-async-lifetime.md"
+                         },
+                         {
+                             "id":  "M3B-008",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.NativeLifetimeTests",
+                             "method":  "Abi_StartCopiesInputAndRejectsReuseOrDestroyUntilWait",
+                             "cases":  [
+                                           "Abi_StartCopiesInputAndRejectsReuseOrDestroyUntilWait"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/NativeLifetimeTests.cs",
+                             "adr":  "docs/adr/0008-native-async-lifetime.md"
+                         },
+                         {
+                             "id":  "M3B-009",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.NativeLifetimeTests",
+                             "method":  "Abi_AsyncRejectsInvalidArgumentsAndWaitBeforeStart",
+                             "cases":  [
+                                           "Abi_AsyncRejectsInvalidArgumentsAndWaitBeforeStart"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/NativeLifetimeTests.cs",
+                             "adr":  "docs/adr/0008-native-async-lifetime.md"
+                         },
+                         {
+                             "id":  "M3B-010",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.TerminationFailureTests",
+                             "method":  "TerminationFailure_OverridesStopOutcomeAndKeepsEngineFaulted",
+                             "cases":  [
+                                           "TerminationFailure_OverridesStopOutcomeAndKeepsEngineFaulted (True,0)",
+                                           "TerminationFailure_OverridesStopOutcomeAndKeepsEngineFaulted (True,1)",
+                                           "TerminationFailure_OverridesStopOutcomeAndKeepsEngineFaulted (True,2)",
+                                           "TerminationFailure_OverridesStopOutcomeAndKeepsEngineFaulted (True,3)",
+                                           "TerminationFailure_OverridesStopOutcomeAndKeepsEngineFaulted (False,0)",
+                                           "TerminationFailure_OverridesStopOutcomeAndKeepsEngineFaulted (False,1)",
+                                           "TerminationFailure_OverridesStopOutcomeAndKeepsEngineFaulted (False,2)",
+                                           "TerminationFailure_OverridesStopOutcomeAndKeepsEngineFaulted (False,3)"
+                                       ],
+                             "source":  "tests/Inspection.Tests/TerminationFailureTests.cs",
+                             "adr":  "docs/adr/0009-termination-failure-quarantine.md"
                          }
                      ]
 }

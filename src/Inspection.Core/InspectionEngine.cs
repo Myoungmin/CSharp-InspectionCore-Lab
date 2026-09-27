@@ -89,7 +89,7 @@ public sealed class InspectionEngine : IAsyncDisposable
         lock (_gate)
         {
             if (_disposeTask is not null) { return new(_disposeTask); }
-            _state = InspectionEngineState.Stopping;
+            if (_state != InspectionEngineState.Faulted) { _state = InspectionEngineState.Stopping; }
             if (_active is not null) { RequestStopLocked(_active, InspectionStopReason.Shutdown); }
             _disposeTask = FinishDisposalAsync(_active?.Completion.Task ?? Task.CompletedTask);
             return new(_disposeTask);
@@ -99,7 +99,7 @@ public sealed class InspectionEngine : IAsyncDisposable
     private async Task FinishDisposalAsync(Task completion)
     {
         await completion.ConfigureAwait(false);
-        lock (_gate) { _state = InspectionEngineState.Disposed; }
+        lock (_gate) { if (_state != InspectionEngineState.Faulted) { _state = InspectionEngineState.Disposed; } }
     }
 
     // All callers hold _gate, including persistence entry and completion arbitration.
@@ -156,13 +156,14 @@ public sealed class InspectionEngine : IAsyncDisposable
             run.StopError = stopError;
             run.ComputedResult = result ?? (error as InspectionRunException)?.ComputedResult ?? run.ComputedResult;
             run.CompletedAtUtc = _timeProvider.GetUtcNow();
-            run.State = stopError is not null ? InspectionRunState.Faulted
+            var terminationError = (error as InspectionRunException)?.InnerException as InspectionTerminationException;
+            run.State = stopError is not null || terminationError is not null ? InspectionRunState.Faulted
                 : run.StopReason == InspectionStopReason.Timeout ? InspectionRunState.TimedOut
                 : run.StopReason is not null ? InspectionRunState.Canceled
                 : error is not null ? InspectionRunState.Faulted : InspectionRunState.Succeeded;
-            if (stopError is not null)
+            if (stopError is not null || terminationError is not null)
             {
-                _error = stopError;
+                _error = stopError ?? terminationError;
                 _state = InspectionEngineState.Faulted;
             }
             _last = run.Snapshot();

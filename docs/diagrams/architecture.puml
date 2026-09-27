@@ -1,6 +1,6 @@
 @startuml architecture
 !pragma layout smetana
-title M3a runtime responsibilities (one console process)
+title M3b runtime responsibilities (one console process)
 skinparam componentStyle rectangle
 component "Host\ncreates dependencies" as Host
 component "Core\nInspectionEngine" as Engine
@@ -8,7 +8,7 @@ component "Core\nInspectionRunner" as Core
 component "Infrastructure\nSimulatedDevice" as Device
 component "Infrastructure\nRangeInspector" as Inspector
 component "Interop\nNativeInspector" as Native
-component "NativeInspection.dll\nC ABI / synchronous inspection" as DLL
+component "NativeInspection.dll\nC ABI / worker and progress callbacks" as DLL
 component "Infrastructure\nJsonResultStore" as Store
 database "RunId.json" as Result
 Host --> Engine : Start / GetStatus / CancelRun
@@ -17,8 +17,8 @@ Host ..> Engine : await DisposeAsync before adapter disposal
 Core --> Device : IDevice
 Core --> Inspector : IInspector (managed)
 Core --> Native : IInspector (native)
-Native --> DLL : LibraryImport / SafeHandle
-Host ..> Native : owns / Dispose
+Native --> DLL : Start / RequestStop / Wait / SafeHandle
+Host ..> Native : owns / await DisposeAsync
 Core --> Store : IResultStore
 Store --> Result : publish after write
 note bottom of Core

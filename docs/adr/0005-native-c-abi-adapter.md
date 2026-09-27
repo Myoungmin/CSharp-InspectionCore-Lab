@@ -1,7 +1,8 @@
 # ADR-0005: Native 검사기를 C ABI와 LibraryImport 어댑터로 연결한다
 
 - Date: 2026-09-27
-- Status: Accepted
+- Status: Superseded
+- Superseded by: [ADR-0008](0008-native-async-lifetime.md). 아래는 M2 당시 결정과 근거다.
 
 ## Context
 

@@ -28,9 +28,11 @@ ADR(Architecture Decision Record)은 **무엇을, 왜 선택했고 어떤 대가
 | [0002 — Windows x64와 고정 도구 체계](0002-windows-x64-toolchain.md) | Accepted | M0/M1, M2 도구 확장 |
 | [0003 — 저장 완료와 취소의 경계](0003-persistence-completion-boundary.md) | Accepted | M1 Runner 한 건 |
 | [0004 — RunId별 JSON 저장](0004-json-result-storage.md) | Accepted | M1/M2 |
-| [0005 — C ABI와 LibraryImport 어댑터](0005-native-c-abi-adapter.md) | Accepted | M2 동기식 Native 검사 |
+| [0005 — C ABI와 LibraryImport 어댑터](0005-native-c-abi-adapter.md) | Superseded | M2 동기식 Native 검사; 0008로 대체 |
 | [0006 — 단일 실행 접수와 조회](0006-single-run-engine.md) | Accepted | M3a Engine |
-| [0007 — 종료 원인과 실제 완료](0007-stop-and-completion-arbitration.md) | Accepted | M3a 취소·타임아웃·종료 |
+| [0007 — 종료 원인과 실제 완료](0007-stop-and-completion-arbitration.md) | Superseded | M3a 취소·타임아웃·종료; 0009로 대체 |
+| [0008 — Native 작업·콜백 수명](0008-native-async-lifetime.md) | Accepted | M3b Start/Stop/Wait/Destroy |
+| [0009 — 종료 실패와 자원 보존](0009-termination-failure-quarantine.md) | Accepted | M3b 종료 미확인 장애·재접수 차단 |
 
 ## 검증 범위
 

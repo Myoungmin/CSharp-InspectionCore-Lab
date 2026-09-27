@@ -1,6 +1,6 @@
 # CSharp InspectionCore Lab
 
-가상 검사 장비로 C# Non-UI Core를 실습하는 프로젝트다. 현재 구현 범위는 **M3a: 단일 실행 접수·Busy·상태·취소·타임아웃과 C#/C++ 검사 → JSON 저장**이다.
+가상 검사 장비로 C# Non-UI Core를 실습하는 프로젝트다. 현재 구현 범위는 **M3b: 단일 실행 제어와 Native 작업·진행 콜백의 안전한 종료, C#/C++ 검사 → JSON 저장**이다.
 
 ## 실행
 
@@ -40,7 +40,7 @@ $env:PLANTUML_JAR = 'C:\tools\plantuml.jar'
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify.ps1
 ```
 
-검증 스크립트는 Native 빌드 → 관리 프로젝트의 잠금 파일 restore·Release 빌드 → Core 단위 테스트 → Native·파일 통합 테스트 → 두 검사기의 실제 콘솔·JSON → 의존성·문서를 검사한다. 현재 필수 테스트는 Core 44개(기존 19 + Engine 25)와 통합 23개(실제 DLL 20 + 파일 3), 총 67개다. 전체 수와 함께 필수 클래스·메서드·데이터 사례의 실행 여부를 확인한다. DLL 배포 해시, DLL 누락 시 실패, 저장 실패, 잘못된 인수, 두 검사기의 즉시 시간 초과도 확인한다. ADR 7건·다이어그램 7개·상대 링크를 검사한다. 테스트 누락·skip, 결과 파일 누락, 검증 중 소스 변경은 실패다. 상세 결과는 `artifacts/verification/<id>/summary.json`, TRX와 로그에 남는다.
+검증 스크립트는 Native 빌드 → 관리 프로젝트의 잠금 파일 restore·Release 빌드 → Core 단위 테스트 → Native·파일 통합 테스트 → 두 검사기의 실제 콘솔·JSON → 의존성·문서를 검사한다. 현재 필수 테스트는 Core 52개(기존 44 + 종료 실패 8)와 통합 35개(실제 DLL 32 + 파일 3), 총 87개다. 전체 수와 함께 필수 클래스·메서드·데이터 사례의 실행 여부를 확인한다. DLL 배포 해시, DLL 누락 시 실패, 저장 실패, 잘못된 인수, 두 검사기의 즉시 시간 초과도 확인한다. ADR 9건·다이어그램 7개·상대 링크를 검사한다. 테스트 누락·skip, 결과 파일 누락, 검증 중 소스 변경은 실패다. 상세 결과는 `artifacts/verification/<id>/summary.json`, TRX와 로그에 남는다.
 
 ## 구조와 다음 단계
 
@@ -51,15 +51,18 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify.ps1
 - [아키텍처 결정 기록과 작성 절차](docs/adr/README.md)
 - [M1 작업·인수 조건](tasks/M01-run-one-job.md)
 - [실습 구현·검증 기록](docs/practice-M01.md)
-- [M2 Native 연동·ABI 계약](docs/native-interop.md)
+- [현재 Native 연동·ABI 계약](docs/native-interop.md)
 - [M2 작업·인수 조건](tasks/M02-native-inspector.md)
 - [M2 실습 기록](docs/practice-M02.md)
-- [M3a Engine 계약](docs/engine-contract.md)
+- [현재 Engine 계약](docs/engine-contract.md)
 - [M3a 작업·인수 조건](tasks/M03a-single-run-engine.md)
 - [M3a 실습 기록](docs/practice-M03a.md)
+- [M3b 작업·인수 조건](tasks/M03b-native-lifetime.md)
+- [M3b 실습 기록](docs/practice-M03b.md)
+- [Native 종료 장애 대응](docs/troubleshooting.md)
 - [문서 유지 규칙](docs/documentation-rules.md)
 - [전체 단계와 Codex 루프 설계](InspectionLab-Architecture-and-Codex-Loop.md)
 
-다음 단계는 M3b의 Native 작업·콜백 종료이며 M3c에서 자동 반복을 연결한다. 현재 Native 호출은 동기식이므로 호출 중 강제 중단을 지원하지 않는다. M3a의 토큰 콜백 종료 검증은 Native 진행 콜백 검증을 대신하지 않는다. IPC, SQLite, C++/CLI, Codex 자동 반복 제어기, .NET 10 전환은 후속 작업이다.
+다음 단계는 M3c의 순차 자동 반복이다. Native는 협조적 정지와 Wait를 제공하고 Host는 진행 통지를 출력한다. Wait 실패로 종료를 확인하지 못하면 자원을 보존하고 같은 엔진의 재접수를 거절한다. 복구는 Host 프로세스 재시작으로 수행한다. IPC, SQLite, C++/CLI, Codex 자동 반복 제어기, .NET 10 전환은 후속 작업이다.
 
 구조나 계약을 결정할 때는 ADR을 한 건씩 추가하고 구현·아키텍처·관련 다이어그램과 함께 갱신한다. 전체 설계 문서는 단계별 계획으로 계속 커밋하며, 현재 구조와 결정 이력은 각각 architecture.md와 ADR에서 관리한다.

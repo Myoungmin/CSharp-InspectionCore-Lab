@@ -30,6 +30,10 @@ class InspectionRunHandle {
 class InspectionRunSnapshot {
   State / Stage / StopReason
   ComputedResult / Error / StopError
+  TerminationConfirmed (null / true / false)
+}
+class InspectionTerminationException {
+  TerminationConfirmed
 }
 interface IDevice {
   PrepareAsync(job, token)
@@ -45,6 +49,7 @@ InspectionRunner --> IDevice : borrows
 InspectionEngine --> InspectionRunner : borrows / one active run
 InspectionEngine ..> InspectionRunHandle : admission
 InspectionEngine ..> InspectionRunSnapshot : immutable snapshot
+InspectionEngine ..> InspectionTerminationException : Faulted / reject new runs
 InspectionRunHandle ..> InspectionRunSnapshot : completion result
 InspectionRunner --> IInspector : borrows
 InspectionRunner --> IResultStore : borrows

@@ -1,5 +1,5 @@
 @startuml run-sequence
-title M3a successful admission, inspection and persistence
+title M3b successful admission, inspection and persistence
 actor User
 participant Host
 participant InspectionEngine as Engine
@@ -19,8 +19,13 @@ Runner -> Device : AcquireAsync(job, token)
 Device --> Runner : samples
 Runner -> Inspector : InspectAsync(job, samples, token)
 opt native inspector selected
-Inspector -> DLL : inspection_run(handle, pinned samples, element count)
-DLL --> Inspector : status + counts + raw score
+Inspector -> DLL : Start(handle, samples, count, callback, rooted context)
+DLL --> Inspector : input copied / worker started
+Inspector -> DLL : Wait(handle)
+DLL -> Inspector : progress callbacks (0..count)
+Inspector --> DLL : callback returns
+DLL --> Inspector : worker joined / operation status + result
+Inspector -> Inspector : unregister token / release callback context and extra handle reference
 Inspector -> Inspector : validate result / convert errors
 end
 Inspector --> Runner : assessment (Pass or Fail)
@@ -37,7 +42,7 @@ Engine --> Host : await handle.Completion
 Host --> User : Succeeded + RunId + verdict + result path
 Host -> Engine : await DisposeAsync()
 opt native inspector selected
-Host -> Inspector : Dispose()
+Host -> Inspector : await DisposeAsync()
 Inspector -> DLL : inspection_destroy(handle) via SafeHandle
 end
 note over Runner, Store

@@ -57,7 +57,8 @@ try
     double[] samples = scenario == "pass" ? [10, 20, 30, 40] : [10, 20, 30, 140];
     var job = new InspectionJob($"demo-{scenario}", samples, 0, 100);
     var store = new JsonResultStore(outputDirectory);
-    using NativeInspector? nativeInspector = inspectorKind == "native" ? new NativeInspector() : null;
+    await using NativeInspector? nativeInspector = inspectorKind == "native"
+        ? new NativeInspector(progress: progress => Console.WriteLine($"NativeProgress={progress.CompletedSamples}/{progress.TotalSamples}")) : null;
     IInspector inspector = nativeInspector is null ? new RangeInspector() : nativeInspector;
     var runner = new InspectionRunner(new SimulatedDevice(), inspector, store);
     await using var engine = new InspectionEngine(runner);
@@ -79,7 +80,7 @@ try
         return completed.State == InspectionRunState.TimedOut ? 124 : 130;
     }
     string score = completed.ComputedResult?.Assessment.Score.ToString("F2", CultureInfo.InvariantCulture) ?? "unavailable";
-    Console.Error.WriteLine($"RunId={run.RunId} Status=Faulted Stage={completed.Stage} ComputedScore={score}");
+    Console.Error.WriteLine($"RunId={run.RunId} Status=Faulted Stage={completed.Stage} ComputedScore={score} TerminationConfirmed={completed.TerminationConfirmed}");
     Console.Error.WriteLine((completed.StopError ?? completed.Error)?.GetBaseException().Message);
     return 1;
 }

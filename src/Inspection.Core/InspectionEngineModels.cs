@@ -16,7 +16,11 @@ public sealed record InspectionRunSnapshot(
     DateTimeOffset? CompletedAtUtc,
     InspectionResult? ComputedResult,
     Exception? Error,
-    Exception? StopError);
+    Exception? StopError)
+{
+    public bool? TerminationConfirmed => CompletedAtUtc is null ? null
+        : ((Error as InspectionRunException)?.InnerException as InspectionTerminationException)?.TerminationConfirmed ?? true;
+}
 
 public sealed record InspectionEngineSnapshot(
     InspectionEngineState State, bool IsBusy, InspectionRunSnapshot? Run, Exception? Error);

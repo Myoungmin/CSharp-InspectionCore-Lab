@@ -1,34 +1,45 @@
 @startuml native-interop
 !pragma layout smetana
-title M2 synchronous native ownership
+title M3b native worker, callback context and ownership
 interface IInspector
 class NativeInspector {
   InspectAsync(job, samples, token)
-  Dispose()
+  DisposeAsync() / Dispose()
+}
+class Operation {
+  copied managed input
+  GCHandle context
+  token registration
 }
 class NativeInspectorHandle {
-  ReleaseHandle()
+  SafeHandle / ReleaseHandle()
 }
-class SafeHandleZeroOrMinusOneIsInvalid
 class NativeMethods {
   LibraryImport declarations
 }
-class "inspection_handle (C++)" as NativeObject
+class "inspection_handle (C++)" as NativeObject {
+  copied vector
+  worker thread
+  atomic stop flag
+}
 NativeInspector ..|> IInspector
 NativeInspector *-- NativeInspectorHandle : owns
-NativeInspectorHandle --|> SafeHandleZeroOrMinusOneIsInvalid
-NativeInspector --> NativeMethods : synchronous Run
-NativeInspectorHandle --> NativeMethods : Destroy
-NativeMethods ..> NativeObject : C ABI create / run / destroy
-note right of NativeInspector
-Host owns the adapter.
-Runner borrows IInspector.
-Input buffer pinned only during Run.
-No worker thread or retained pointer.
+NativeInspector *-- Operation : at most one active
+Operation --> NativeMethods : Start / RequestStop / Wait
+Operation --> NativeInspectorHandle : extra reference until confirmed join
+NativeInspectorHandle --> NativeMethods : Destroy (rejects unjoined worker)
+NativeMethods ..> NativeObject : C ABI v2
+NativeObject ..> Operation : static callback / rooted context
+note right of Operation
+Start copies pinned input before returning.
+Wait joins the worker and all callbacks.
+Then unregister token, free context and release extra reference.
+Late progress after stop is suppressed; in-flight callback must return.
 end note
-note bottom of NativeInspectorHandle
-P/Invoke SafeHandle marshaling protects each call.
-Dispose releases deterministically;
-finalization is a fallback.
+note bottom of NativeInspector
+Host awaits Engine disposal, then adapter disposal.
+Stop failure: join, fault engine, release safely.
+Wait failure: retain handle reference + GCHandle until process exit.
+Faulted engine rejects all new runs.
 end note
 @enduml

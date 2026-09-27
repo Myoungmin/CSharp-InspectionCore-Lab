@@ -1,12 +1,12 @@
-# M3a 아키텍처
+# M3b 아키텍처
 
-현재 프로그램은 Host 콘솔 프로세스 하나에서 Engine을 통해 가상 검사 한 건을 실행한다. C# RangeInspector와 C++ DLL 기반 NativeInspector를 선택할 수 있다. Core Engine의 단일 접수·Busy·상태·취소·타임아웃을 제공하며 자동 반복, Native 비동기 종료, IPC, SQLite는 후속이다.
+현재 프로그램은 Host 콘솔 프로세스 하나에서 Engine을 통해 가상 검사 한 건을 실행한다. C# RangeInspector와 C++ DLL 기반 NativeInspector를 선택할 수 있다. Core Engine의 단일 접수·Busy·상태·취소·타임아웃을 제공하며 Native 협조적 정지·진행 콜백·실제 종료 후 해제를 제공한다. 자동 반복, IPC, SQLite는 후속이다.
 
 책임 분리·도구 체계·완료 경계·JSON 저장·Native 연동을 선택한 이유는 [ADR 목록](adr/README.md)에 기록한다. 이 문서는 현재 계약을 설명하며 결정이 바뀌면 새 ADR과 함께 갱신한다.
 
 ## 프로젝트와 소유권
 
-![M3a runtime](diagrams/generated/architecture.svg)
+![M3b runtime](diagrams/generated/architecture.svg)
 
 Host가 SimulatedDevice, 선택한 IInspector 구현, JsonResultStore, InspectionRunner, InspectionEngine을 생성한다. NativeInspector는 SafeHandle로 C++ 객체 하나를 소유하며 Host는 Engine의 DisposeAsync를 기다린 후 NativeInspector를 해제한다. JsonResultStore는 각 저장의 FileStream을 자신의 메서드 안에서 해제한다. Engine은 실행별 토큰·타이머를 소유하고, Engine과 Runner 모두 주입받은 의존성은 해제하지 않는다.
 
@@ -36,6 +36,6 @@ Native DLL은 Visual Studio MSBuild로 빌드하고 관리 프로젝트는 dotne
 
 ## 검증 범위
 
-Core MSTest 44개는 기존 Job·Runner 19개와 Engine 25개다. 동시 접수, 현재 단계, 취소·시간 초과·완료 경합, 콜백 종료, Dispose를 확인한다. 시간은 TimeProvider로 주입하고 비동기 순서는 TaskCompletionSource로 제어한다. 통합 테스트 23개는 실제 x64 DLL·ABI·배열·오류·핸들 해제와 실제 파일 저장을 확인한다. 두 검사기의 실제 콘솔·JSON·저장 오류·DLL 누락·즉시 타임아웃은 verify.ps1에서 별도로 확인한다. [필수 사례 대응표](verification-map.md)로 기존 사례 누락을 검사한다.
+Core MSTest 52개는 기존 Job·Runner 19개, Engine 25개, 종료 실패 판정 8개다. 동시 접수, 현재 단계, 취소·시간 초과·완료 경합, 콜백 종료, Dispose를 확인한다. 시간은 TimeProvider로 주입하고 비동기 순서는 TaskCompletionSource로 제어한다. 통합 테스트 35개는 기존 실제 DLL 20개·파일 3개와 Native 비동기 수명 12개다. 명시적 콜백 신호로 취소·Dispose·늦은 콜백과 정지·Wait 실패를 확인한다. 두 검사기의 실제 콘솔·JSON·저장 오류·DLL 누락·즉시 타임아웃은 verify.ps1에서 별도로 확인한다. [필수 사례 대응표](verification-map.md)로 기존 사례 누락을 검사한다.
 
-상태 조회는 Core Engine API이며 Host는 아직 CLI 한 건 실행이다. 별도 프로세스의 조회·취소는 M4의 IPC 작업이다. Native 호출 중 정지·Native 진행 콜백의 종료 보장은 M3b에서 구현한다.
+상태 조회는 Core Engine API이며 Host는 아직 CLI 한 건 실행이다. 별도 프로세스의 조회·취소는 M4의 IPC 작업이다. NativeInspector는 Start에서 입력을 복사하고 Wait에서 작업·콜백을 join한다. Wait 실패 시 자원을 보존하고 Engine을 Faulted로 고정한다. 이때 TerminationConfirmed=false이며 관리 완료를 실제 Native 종료로 해석하지 않는다. [장애 대응](troubleshooting.md)을 따른다.

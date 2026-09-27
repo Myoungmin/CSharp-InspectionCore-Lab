@@ -1,6 +1,6 @@
 @startuml run-state
 !pragma layout smetana
-title M3a admitted run states (no queue)
+title M3b admitted run states (no queue)
 [*] --> Running : slot reserved / Accepted
 Running --> CancelRequested : first UserCancellation / Timeout / Shutdown
 Running --> Persisting : persistence wins shared lock
@@ -9,7 +9,7 @@ Persisting --> Succeeded : save succeeds and cleanup finishes
 Persisting --> Faulted : save or cleanup fails
 CancelRequested --> Canceled : work + callbacks ended\nUserCancellation / Shutdown
 CancelRequested --> TimedOut : work + callbacks ended\nTimeout
-CancelRequested --> Faulted : stop callback or cleanup fails
+CancelRequested --> Faulted : termination protocol or cleanup fails
 Succeeded --> [*]
 Faulted --> [*]
 Canceled --> [*]
@@ -20,14 +20,16 @@ Timeout cannot replace persistence outcome.
 Product Fail can still become Succeeded.
 end note
 note left of CancelRequested
-Slot stays Busy until actual completion.
+Slot stays Busy while waiting for work and callbacks.
 First accepted reason is preserved.
-M2 native calls must return on their own.
+Native RequestStop is only a request; Wait joins work.
 end note
 note bottom of Faulted
 Ordinary run failure leaves the engine Ready.
-Stop/cleanup failure faults the engine and blocks admission.
-Engine lifetime: Ready -> Stopping -> Disposed.
+Stop/Wait/cleanup failure faults the engine and blocks admission.
+Unconfirmed Wait: resources retained; TerminationConfirmed=false.
+Completion then means failure arbitration, not native termination.
+Faulted survives Dispose; normal lifetime ends in Disposed.
 Ready and IsBusy describe different properties.
 end note
 @enduml

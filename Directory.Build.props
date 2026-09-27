@@ -1,5 +1,5 @@
 <Project>
-  <PropertyGroup>
+  <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
     <TargetFramework>net9.0</TargetFramework>
     <LangVersion>13.0</LangVersion>
     <Nullable>enable</Nullable>

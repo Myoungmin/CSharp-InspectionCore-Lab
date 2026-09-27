@@ -1,16 +1,20 @@
-# M0·M1 아키텍처
+# M2 아키텍처
 
-현재 프로그램은 Host 콘솔 프로세스 하나에서 가상 검사 한 건을 실행한다. Native DLL, 실행 엔진의 Busy·상태 조회, 자동 반복, IPC, SQLite는 아직 없다.
+현재 프로그램은 Host 콘솔 프로세스 하나에서 가상 검사 한 건을 실행한다. C# RangeInspector와 C++ DLL 기반 NativeInspector를 선택할 수 있다. 실행 엔진의 Busy·상태 조회, 자동 반복, IPC, SQLite는 아직 없다.
+
+책임 분리·도구 체계·완료 경계·JSON 저장·Native 연동을 선택한 이유는 [ADR 목록](adr/README.md)에 기록한다. 이 문서는 현재 계약을 설명하며 결정이 바뀌면 새 ADR과 함께 갱신한다.
 
 ## 프로젝트와 소유권
 
-![M1 runtime](diagrams/generated/architecture.svg)
+![M2 runtime](diagrams/generated/architecture.svg)
 
-Host가 SimulatedDevice, RangeInspector, JsonResultStore, InspectionRunner를 생성한다. 현재 어댑터들은 지속적으로 보유하는 해제 대상 자원이 없다. JsonResultStore는 각 저장의 FileStream을 자신의 메서드 안에서 해제한다. Runner는 주입받은 객체를 해제하지 않는다.
+Host가 SimulatedDevice, 선택한 IInspector 구현, JsonResultStore, InspectionRunner를 생성한다. NativeInspector는 SafeHandle로 C++ 객체 하나를 소유하며 Host의 using 범위에서 해제한다. JsonResultStore는 각 저장의 FileStream을 자신의 메서드 안에서 해제한다. Runner는 주입받은 객체를 해제하지 않는다.
 
 ![Project references](diagrams/generated/dependencies.generated.svg)
 
-이 그림은 실제 MSBuild 평가 결과에서 생성한다. 실행 중 Core가 인터페이스를 호출하는 방향과 프로젝트 참조 방향을 구분한다. Core에는 외부 패키지 참조가 없다. Tests도 Core만 참조하며 실제 어댑터·콘솔·파일은 검증 스크립트가 확인한다.
+실선은 실제 MSBuild 평가 결과의 관리 프로젝트 참조이며 점선은 Interop의 Native DLL 런타임 호출이다. Core와 Interop에는 외부 패키지 참조가 없다. Tests는 Core만 참조한다. IntegrationTests가 실제 어댑터·DLL·파일을 검사하며 콘솔 프로세스와 배포는 검증 스크립트가 확인한다. NativeInspection은 관리 프로젝트를 참조하지 않는 독립 C++ DLL이다.
+
+Native DLL은 Visual Studio MSBuild로 빌드하고 관리 프로젝트는 dotnet으로 빌드한다. Visual Studio 솔루션에는 Interop 이전에 Native를 빌드하도록 솔루션 의존성을 둔다. [Native ABI와 수명 계약](native-interop.md)을 함께 읽는다.
 
 ## 계약과 실행 순서
 
@@ -32,6 +36,6 @@ Host가 SimulatedDevice, RangeInspector, JsonResultStore, InspectionRunner를 �
 
 ## 검증 범위
 
-MSTest는 정상·불량, 단계별 실패와 후속 호출 차단, Job 스냅샷, RunId 분리, 취소 시점과 저장 결과의 관계를 검사한다. 시간은 TimeProvider로 주입하고 비동기 순서는 TaskCompletionSource로 제어한다. 실제 콘솔·JSON·저장 오류는 verify.ps1에서 별도로 확인한다.
+Core MSTest 19개는 정상·불량, 단계별 실패와 후속 호출 차단, Job 스냅샷, RunId 분리, 취소 시점과 저장 결과의 관계를 검사한다. 시간은 TimeProvider로 주입하고 비동기 순서는 TaskCompletionSource로 제어한다. 통합 테스트 23개는 실제 x64 DLL·ABI·배열·오류·핸들 해제와 실제 파일 저장을 확인한다. 두 검사기의 실제 콘솔·JSON·저장 오류·DLL 누락은 verify.ps1에서 별도로 확인한다.
 
 M3의 Persisting/CancelRequested/TimedOut 등 공개 실행 상태는 전체 설계 문서에 정의한 후속 계약이다. 현재 Host의 종료 로그를 상태 조회 API로 취급하지 않는다.

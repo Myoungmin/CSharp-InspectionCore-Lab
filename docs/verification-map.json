@@ -1,0 +1,317 @@
+{
+    "schemaVersion":  1,
+    "requirements":  [
+                         {
+                             "id":  "BASE-001",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionJobTests",
+                             "method":  "Assessment_RejectsImpossibleCounts",
+                             "cases":  [
+                                           "Assessment_RejectsImpossibleCounts"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionJobTests.cs",
+                             "adr":  "docs/adr/0001-core-ports-and-composition.md"
+                         },
+                         {
+                             "id":  "BASE-002",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionJobTests",
+                             "method":  "Assessment_ReportsYieldAndProductVerdict",
+                             "cases":  [
+                                           "Assessment_ReportsYieldAndProductVerdict (3,0,100,Pass)",
+                                           "Assessment_ReportsYieldAndProductVerdict (3,1,66.67,Fail)",
+                                           "Assessment_ReportsYieldAndProductVerdict (3,3,0,Fail)"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionJobTests.cs",
+                             "adr":  "docs/adr/0001-core-ports-and-composition.md"
+                         },
+                         {
+                             "id":  "BASE-003",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionJobTests",
+                             "method":  "Job_CopiesInputAndExposesReadOnlySamples",
+                             "cases":  [
+                                           "Job_CopiesInputAndExposesReadOnlySamples"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionJobTests.cs",
+                             "adr":  "docs/adr/0001-core-ports-and-composition.md"
+                         },
+                         {
+                             "id":  "BASE-004",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionJobTests",
+                             "method":  "Job_RejectsInvalidDefinitionsBeforeDeviceAccess",
+                             "cases":  [
+                                           "Job_RejectsInvalidDefinitionsBeforeDeviceAccess"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionJobTests.cs",
+                             "adr":  "docs/adr/0001-core-ports-and-composition.md"
+                         },
+                         {
+                             "id":  "BASE-005",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionRunnerTests",
+                             "method":  "AlreadyCanceled_DoesNotCallDevice",
+                             "cases":  [
+                                           "AlreadyCanceled_DoesNotCallDevice"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionRunnerTests.cs",
+                             "adr":  "docs/adr/0003-persistence-completion-boundary.md"
+                         },
+                         {
+                             "id":  "BASE-006",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionRunnerTests",
+                             "method":  "CancellationAfterPersistenceStarts_DoesNotOverrideStorageOutcome",
+                             "cases":  [
+                                           "CancellationAfterPersistenceStarts_DoesNotOverrideStorageOutcome (False)",
+                                           "CancellationAfterPersistenceStarts_DoesNotOverrideStorageOutcome (True)"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionRunnerTests.cs",
+                             "adr":  "docs/adr/0003-persistence-completion-boundary.md"
+                         },
+                         {
+                             "id":  "BASE-007",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionRunnerTests",
+                             "method":  "CancellationBeforePersistence_PreventsSaveEvenIfInspectorReturnsNormally",
+                             "cases":  [
+                                           "CancellationBeforePersistence_PreventsSaveEvenIfInspectorReturnsNormally"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionRunnerTests.cs",
+                             "adr":  "docs/adr/0003-persistence-completion-boundary.md"
+                         },
+                         {
+                             "id":  "BASE-008",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionRunnerTests",
+                             "method":  "CancellationDuringAcquisition_DoesNotInspectOrSave",
+                             "cases":  [
+                                           "CancellationDuringAcquisition_DoesNotInspectOrSave"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionRunnerTests.cs",
+                             "adr":  "docs/adr/0003-persistence-completion-boundary.md"
+                         },
+                         {
+                             "id":  "BASE-009",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionRunnerTests",
+                             "method":  "Failure_StopsLaterStagesAndPreservesCause",
+                             "cases":  [
+                                           "Failure_StopsLaterStagesAndPreservesCause (Acquire,2)",
+                                           "Failure_StopsLaterStagesAndPreservesCause (Inspect,3)",
+                                           "Failure_StopsLaterStagesAndPreservesCause (Persist,4)",
+                                           "Failure_StopsLaterStagesAndPreservesCause (Prepare,1)"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionRunnerTests.cs",
+                             "adr":  "docs/adr/0003-persistence-completion-boundary.md"
+                         },
+                         {
+                             "id":  "BASE-010",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionRunnerTests",
+                             "method":  "RepeatedJobDefinition_GetsDistinctRunIds",
+                             "cases":  [
+                                           "RepeatedJobDefinition_GetsDistinctRunIds"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionRunnerTests.cs",
+                             "adr":  "docs/adr/0003-persistence-completion-boundary.md"
+                         },
+                         {
+                             "id":  "BASE-011",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionRunnerTests",
+                             "method":  "RunAsync_ReturnsOnlyAfterAllStagesIncludingStorage",
+                             "cases":  [
+                                           "RunAsync_ReturnsOnlyAfterAllStagesIncludingStorage (0,Pass,100)",
+                                           "RunAsync_ReturnsOnlyAfterAllStagesIncludingStorage (1,Fail,75)"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionRunnerTests.cs",
+                             "adr":  "docs/adr/0003-persistence-completion-boundary.md"
+                         },
+                         {
+                             "id":  "BASE-012",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionRunnerTests",
+                             "method":  "UnrelatedOperationCanceledException_IsAnExecutionFailure",
+                             "cases":  [
+                                           "UnrelatedOperationCanceledException_IsAnExecutionFailure"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionRunnerTests.cs",
+                             "adr":  "docs/adr/0003-persistence-completion-boundary.md"
+                         },
+                         {
+                             "id":  "BASE-013",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.JsonResultStoreTests",
+                             "method":  "CanceledSave_DoesNotCreateOutputDirectory",
+                             "cases":  [
+                                           "CanceledSave_DoesNotCreateOutputDirectory"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/JsonResultStoreTests.cs",
+                             "adr":  "docs/adr/0004-json-result-storage.md"
+                         },
+                         {
+                             "id":  "BASE-014",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.JsonResultStoreTests",
+                             "method":  "DuplicateRunId_DoesNotOverwriteOriginalOrLeaveTemporaryFile",
+                             "cases":  [
+                                           "DuplicateRunId_DoesNotOverwriteOriginalOrLeaveTemporaryFile"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/JsonResultStoreTests.cs",
+                             "adr":  "docs/adr/0004-json-result-storage.md"
+                         },
+                         {
+                             "id":  "BASE-015",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.JsonResultStoreTests",
+                             "method":  "Save_PublishesCompleteJsonAndRemovesTemporaryFile",
+                             "cases":  [
+                                           "Save_PublishesCompleteJsonAndRemovesTemporaryFile"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/JsonResultStoreTests.cs",
+                             "adr":  "docs/adr/0004-json-result-storage.md"
+                         },
+                         {
+                             "id":  "BASE-016",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.NativeInspectorTests",
+                             "method":  "Abi_ReadsOnlyRequestedPrefixAndReturnsNativeScore",
+                             "cases":  [
+                                           "Abi_ReadsOnlyRequestedPrefixAndReturnsNativeScore"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/NativeInspectorTests.cs",
+                             "adr":  "docs/adr/0005-native-c-abi-adapter.md"
+                         },
+                         {
+                             "id":  "BASE-017",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.NativeInspectorTests",
+                             "method":  "Abi_RejectsNonPositiveLengthsAndClearsResult",
+                             "cases":  [
+                                           "Abi_RejectsNonPositiveLengthsAndClearsResult (0)",
+                                           "Abi_RejectsNonPositiveLengthsAndClearsResult (-1)"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/NativeInspectorTests.cs",
+                             "adr":  "docs/adr/0005-native-c-abi-adapter.md"
+                         },
+                         {
+                             "id":  "BASE-018",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.NativeInspectorTests",
+                             "method":  "Abi_RejectsNullPointersAndInvalidBounds",
+                             "cases":  [
+                                           "Abi_RejectsNullPointersAndInvalidBounds"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/NativeInspectorTests.cs",
+                             "adr":  "docs/adr/0005-native-c-abi-adapter.md"
+                         },
+                         {
+                             "id":  "BASE-019",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.NativeInspectorTests",
+                             "method":  "ActualDll_IsX64AndMatchesManagedAbiLayout",
+                             "cases":  [
+                                           "ActualDll_IsX64AndMatchesManagedAbiLayout"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/NativeInspectorTests.cs",
+                             "adr":  "docs/adr/0005-native-c-abi-adapter.md"
+                         },
+                         {
+                             "id":  "BASE-020",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.NativeInspectorTests",
+                             "method":  "AlreadyCanceled_DoesNotEnterThrowingNativeInspector",
+                             "cases":  [
+                                           "AlreadyCanceled_DoesNotEnterThrowingNativeInspector"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/NativeInspectorTests.cs",
+                             "adr":  "docs/adr/0005-native-c-abi-adapter.md"
+                         },
+                         {
+                             "id":  "BASE-021",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.NativeInspectorTests",
+                             "method":  "CppExceptionDuringCreate_BecomesManagedExceptionWithoutLeaking",
+                             "cases":  [
+                                           "CppExceptionDuringCreate_BecomesManagedExceptionWithoutLeaking"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/NativeInspectorTests.cs",
+                             "adr":  "docs/adr/0005-native-c-abi-adapter.md"
+                         },
+                         {
+                             "id":  "BASE-022",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.NativeInspectorTests",
+                             "method":  "CppExceptionDuringInspect_FaultsRunnerAndPreventsSave",
+                             "cases":  [
+                                           "CppExceptionDuringInspect_FaultsRunnerAndPreventsSave"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/NativeInspectorTests.cs",
+                             "adr":  "docs/adr/0005-native-c-abi-adapter.md"
+                         },
+                         {
+                             "id":  "BASE-023",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.NativeInspectorTests",
+                             "method":  "DisposeTwice_DestroysExactlyOneNativeObjectAndRejectsReuse",
+                             "cases":  [
+                                           "DisposeTwice_DestroysExactlyOneNativeObjectAndRejectsReuse"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/NativeInspectorTests.cs",
+                             "adr":  "docs/adr/0005-native-c-abi-adapter.md"
+                         },
+                         {
+                             "id":  "BASE-024",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.NativeInspectorTests",
+                             "method":  "InvalidAcquiredSamples_MapNativeErrorCode",
+                             "cases":  [
+                                           "InvalidAcquiredSamples_MapNativeErrorCode (0)",
+                                           "InvalidAcquiredSamples_MapNativeErrorCode (1)",
+                                           "InvalidAcquiredSamples_MapNativeErrorCode (2)",
+                                           "InvalidAcquiredSamples_MapNativeErrorCode (3)"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/NativeInspectorTests.cs",
+                             "adr":  "docs/adr/0005-native-c-abi-adapter.md"
+                         },
+                         {
+                             "id":  "BASE-025",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.NativeInspectorTests",
+                             "method":  "MemorySlice_UsesOffsetAndElementCount",
+                             "cases":  [
+                                           "MemorySlice_UsesOffsetAndElementCount"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/NativeInspectorTests.cs",
+                             "adr":  "docs/adr/0005-native-c-abi-adapter.md"
+                         },
+                         {
+                             "id":  "BASE-026",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.NativeInspectorTests",
+                             "method":  "NativeAndManagedInspectors_AgreeOnSameContract",
+                             "cases":  [
+                                           "NativeAndManagedInspectors_AgreeOnSameContract (0,0,100)",
+                                           "NativeAndManagedInspectors_AgreeOnSameContract (1,1,75)",
+                                           "NativeAndManagedInspectors_AgreeOnSameContract (2,0,100)",
+                                           "NativeAndManagedInspectors_AgreeOnSameContract (3,3,0)",
+                                           "NativeAndManagedInspectors_AgreeOnSameContract (4,1,66.67)"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/NativeInspectorTests.cs",
+                             "adr":  "docs/adr/0005-native-c-abi-adapter.md"
+                         },
+                         {
+                             "id":  "BASE-027",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.NativeInspectorTests",
+                             "method":  "SafeHandleFinalizer_ReleasesAbandonedNativeObject",
+                             "cases":  [
+                                           "SafeHandleFinalizer_ReleasesAbandonedNativeObject"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/NativeInspectorTests.cs",
+                             "adr":  "docs/adr/0005-native-c-abi-adapter.md"
+                         }
+                     ]
+}

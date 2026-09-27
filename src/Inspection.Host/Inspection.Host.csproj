@@ -5,5 +5,6 @@
   <ItemGroup>
     <ProjectReference Include="../Inspection.Core/Inspection.Core.csproj" />
     <ProjectReference Include="../Inspection.Infrastructure/Inspection.Infrastructure.csproj" />
+    <ProjectReference Include="../Inspection.Interop/Inspection.Interop.csproj" />
   </ItemGroup>
 </Project>

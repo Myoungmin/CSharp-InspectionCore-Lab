@@ -2,6 +2,9 @@
 .gitattributes text eol=lf
 .gitignore text eol=lf
 *.cs text eol=lf
+*.cpp text eol=lf
+*.h text eol=lf
+*.vcxproj text eol=lf
 *.csproj text eol=lf
 *.props text eol=lf
 *.json text eol=lf

@@ -11,7 +11,7 @@ $powershell = Join-Path $PSHOME 'powershell.exe'
 $verificationId = [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssZ') + '-' + [Guid]::NewGuid().ToString('N').Substring(0, 8)
 $outputDir = Join-Path $repoRoot "artifacts/verification/$verificationId"
 New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
-$summary = [ordered]@{ verificationId = $verificationId; status = 'Failed'; baselineCommit = $null; sourceHash = $null; testsPassed = 0; smokeCases = @(); steps = @(); error = $null }
+$summary = [ordered]@{ milestone = 'M2'; verificationId = $verificationId; status = 'Failed'; baselineCommit = $null; sourceHash = $null; nativeDllHash = $null; testsPassed = 0; integrationTestsPassed = 0; nativeTestsPassed = 0; smokeCases = @(); steps = @(); error = $null }
 
 function Get-SourceSnapshot {
     $paths = @(& git -C $repoRoot -c core.quotepath=false ls-files --cached --others --exclude-standard | Sort-Object -Unique)
@@ -45,8 +45,19 @@ try {
     $before = Get-SourceSnapshot
     $summary.sourceHash = $before.Hash
     [IO.File]::WriteAllText((Join-Path $outputDir 'source-manifest.json'), $before.Manifest, [Text.UTF8Encoding]::new($false))
-    $null = Invoke-Step 'restore' $dotnet @('restore', 'InspectionLab.sln', '--locked-mode')
-    $null = Invoke-Step 'build' $dotnet @('build', 'InspectionLab.sln', '--configuration', 'Release', '--no-restore')
+    $null = Invoke-Step 'build-native' $powershell @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $PSScriptRoot 'build-native.ps1'))
+    $nativeDll = Join-Path $repoRoot 'artifacts/native/Release/NativeInspection.dll'
+    $summary.nativeDllHash = (Get-FileHash -LiteralPath $nativeDll -Algorithm SHA256).Hash
+    # dotnet MSBuild cannot build vcxproj. Build the managed entrypoints and their references explicitly.
+    $managedEntrypoints = [ordered]@{
+        'host' = 'src/Inspection.Host/Inspection.Host.csproj'
+        'core-tests' = 'tests/Inspection.Tests/Inspection.Tests.csproj'
+        'integration-tests' = 'tests/Inspection.IntegrationTests/Inspection.IntegrationTests.csproj'
+    }
+    foreach ($entry in $managedEntrypoints.GetEnumerator()) {
+        $null = Invoke-Step "restore-$($entry.Key)" $dotnet @('restore', $entry.Value, '--locked-mode')
+        $null = Invoke-Step "build-$($entry.Key)" $dotnet @('build', $entry.Value, '--configuration', 'Release', '--no-restore')
+    }
     $testDir = Join-Path $outputDir 'tests'
     $null = Invoke-Step 'mstest' $dotnet @('test', 'tests/Inspection.Tests/Inspection.Tests.csproj', '--configuration', 'Release', '--no-build', '--no-restore', '--logger', 'trx;LogFileName=core.trx', '--results-directory', $testDir, '--blame-hang-timeout', '30s')
     $trxPath = Join-Path $testDir 'core.trx'
@@ -60,14 +71,37 @@ try {
     }
     $summary.testsPassed = [int]$counters.passed
 
+    $integrationDir = Join-Path $outputDir 'integration-tests'
+    $null = Invoke-Step 'integration-mstest' $dotnet @('test', 'tests/Inspection.IntegrationTests/Inspection.IntegrationTests.csproj', '--configuration', 'Release', '--no-build', '--no-restore', '--logger', 'trx;LogFileName=integration.trx', '--results-directory', $integrationDir, '--blame-hang-timeout', '30s')
+    $integrationTrxPath = Join-Path $integrationDir 'integration.trx'
+    if (-not (Test-Path -LiteralPath $integrationTrxPath)) { throw 'Required integration TRX was not produced.' }
+    [xml]$integrationTrx = [IO.File]::ReadAllText($integrationTrxPath)
+    $integrationCounters = $integrationTrx.TestRun.ResultSummary.Counters
+    $integrationResults = @($integrationTrx.TestRun.Results.UnitTestResult)
+    if ([int]$integrationCounters.total -lt 23 -or [int]$integrationCounters.executed -ne [int]$integrationCounters.total -or
+        [int]$integrationCounters.passed -ne [int]$integrationCounters.total -or $integrationResults.Count -ne [int]$integrationCounters.total -or
+        @($integrationResults | Where-Object { $_.outcome -ne 'Passed' }).Count -gt 0) {
+        throw 'M2 requires at least 23 integration tests, all executed and passing; skip is not permitted.'
+    }
+    $nativeTestIds = @($integrationTrx.TestRun.TestDefinitions.UnitTest | Where-Object { $_.TestMethod.className -like 'Inspection.IntegrationTests.NativeInspectorTests*' } | ForEach-Object { $_.id })
+    $nativeResults = @($integrationResults | Where-Object { $_.testId -in $nativeTestIds })
+    if ($nativeResults.Count -lt 20) { throw 'The 20 mandatory actual-DLL test cases were not executed.' }
+    $summary.integrationTestsPassed = [int]$integrationCounters.passed
+    $summary.nativeTestsPassed = $nativeResults.Count
+    $null = Invoke-Step 'required-test-cases' $powershell @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $PSScriptRoot 'check-required-tests.ps1'), '-CoreTrx', $trxPath, '-IntegrationTrx', $integrationTrxPath)
+    foreach ($copy in @('src/Inspection.Host/bin/Release/net9.0/NativeInspection.dll', 'tests/Inspection.IntegrationTests/bin/Release/net9.0/NativeInspection.dll')) {
+        if ((Get-FileHash -LiteralPath (Join-Path $repoRoot $copy) -Algorithm SHA256).Hash -ne $summary.nativeDllHash) { throw "Stale native DLL deployed to $copy" }
+    }
+
     $hostDll = Join-Path $repoRoot 'src/Inspection.Host/bin/Release/net9.0/Inspection.Host.dll'
     $resultDir = Join-Path $outputDir 'results with spaces'
     $seenIds = @()
-    foreach ($scenario in @('pass', 'fail', 'pass')) {
+    foreach ($inspector in @('managed', 'native')) {
+      foreach ($scenario in @('pass', 'fail', 'pass')) {
         $index = $seenIds.Count
-        $hostResult = Invoke-Step "host-$index-$scenario" $dotnet @($hostDll, '--scenario', $scenario, '--output', $resultDir) -TimeoutSeconds 30
+        $hostResult = Invoke-Step "host-$index-$inspector-$scenario" $dotnet @($hostDll, '--scenario', $scenario, '--inspector', $inspector, '--output', $resultDir) -TimeoutSeconds 30
         $runMatch = [regex]::Match($hostResult.Stdout, 'RunId=([0-9a-fA-F-]{36})')
-        if (-not $runMatch.Success -or $hostResult.Stdout -notmatch 'Status=Succeeded') { throw 'Host did not report a successful run with RunId.' }
+        if (-not $runMatch.Success -or $hostResult.Stdout -notmatch 'Status=Succeeded' -or $hostResult.Stdout -notmatch "Inspector=$inspector") { throw 'Host did not report a successful run with RunId and the selected inspector.' }
         $runId = [Guid]::Parse($runMatch.Groups[1].Value)
         if ($runId -eq [Guid]::Empty -or $runId -in $seenIds) { throw 'RunId must be nonempty and unique.' }
         $seenIds += $runId
@@ -83,9 +117,10 @@ try {
             [DateTimeOffset]$data.InspectedAtUtc -lt [DateTimeOffset]$data.StartedAtUtc) {
             throw "Unexpected persisted result for $scenario."
         }
-        $summary.smokeCases += [ordered]@{ scenario = $scenario; runId = $runId.ToString(); verdict = $expectedVerdict; score = $expectedScore }
+        $summary.smokeCases += [ordered]@{ inspector = $inspector; scenario = $scenario; runId = $runId.ToString(); verdict = $expectedVerdict; score = $expectedScore }
+      }
     }
-    if (@(Get-ChildItem -LiteralPath $resultDir -Filter '*.json').Count -ne 3 -or @(Get-ChildItem -LiteralPath $resultDir -Filter '*.tmp').Count -ne 0) {
+    if (@(Get-ChildItem -LiteralPath $resultDir -Filter '*.json').Count -ne 6 -or @(Get-ChildItem -LiteralPath $resultDir -Filter '*.tmp').Count -ne 0) {
         throw 'Unexpected result count or unfinished temporary files.'
     }
 
@@ -96,6 +131,14 @@ try {
         throw 'Storage failure must preserve the computed score and report Faulted at Persist.'
     }
     $null = Invoke-Step 'host-invalid-arguments' $dotnet @($hostDll, '--scenario', 'unknown') -ExpectedExitCode 2 -TimeoutSeconds 30
+    $null = Invoke-Step 'host-invalid-inspector' $dotnet @($hostDll, '--inspector', 'unknown') -ExpectedExitCode 2 -TimeoutSeconds 30
+    $missingDllDir = Join-Path $outputDir 'missing native dll'
+    New-Item -ItemType Directory -Path $missingDllDir | Out-Null
+    Get-ChildItem -LiteralPath (Split-Path -Parent $hostDll) -File | Where-Object { $_.Name -ne 'NativeInspection.dll' } | Copy-Item -Destination $missingDllDir
+    $missingDll = Invoke-Step 'host-missing-native-dll' $dotnet @((Join-Path $missingDllDir 'Inspection.Host.dll'), '--inspector', 'native', '--output', (Join-Path $missingDllDir 'results')) -ExpectedExitCode 1 -TimeoutSeconds 30
+    if ($missingDll.Stderr -notmatch 'Status=Faulted Stage=Setup' -or $missingDll.Stdout -match 'Succeeded' -or (Test-Path -LiteralPath (Join-Path $missingDllDir 'results'))) {
+        throw 'A missing native DLL must fail setup without falling back to the managed inspector or producing results.'
+    }
     $null = Invoke-Step 'architecture' $powershell @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $PSScriptRoot 'check-architecture.ps1'))
     $null = Invoke-Step 'documentation' $powershell @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $PSScriptRoot 'build-docs.ps1'))
     $after = Get-SourceSnapshot

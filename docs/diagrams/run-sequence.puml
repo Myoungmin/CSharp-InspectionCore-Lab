@@ -1,10 +1,11 @@
 @startuml run-sequence
-title M1 successful inspection and persistence boundary
+title M2 successful inspection and persistence boundary
 actor User
 participant Host
 participant InspectionRunner as Runner
 participant IDevice as Device
 participant IInspector as Inspector
+participant "NativeInspection.dll" as DLL
 participant IResultStore as Store
 User -> Host : run pass or fail scenario
 Host -> Runner : RunAsync(job, token)
@@ -14,6 +15,11 @@ Device --> Runner : ready
 Runner -> Device : AcquireAsync(job, token)
 Device --> Runner : samples
 Runner -> Inspector : InspectAsync(job, samples, token)
+opt native inspector selected
+Inspector -> DLL : inspection_run(handle, pinned samples, element count)
+DLL --> Inspector : status + counts + raw score
+Inspector -> Inspector : validate result / convert errors
+end
 Inspector --> Runner : assessment (Pass or Fail)
 Runner -> Runner : atomically enter persistence
 note right of Runner : cancellation accepted before this point prevents saving
@@ -22,6 +28,10 @@ Store -> Store : write temporary file, then rename
 Store --> Runner : persisted
 Runner --> Host : InspectionResult
 Host --> User : Succeeded + RunId + verdict + result path
+opt native inspector selected
+Host -> Inspector : Dispose()
+Inspector -> DLL : inspection_destroy(handle) via SafeHandle
+end
 note over Runner, Store
 Late caller cancellation cannot replace storage outcome.
 Save failure throws InspectionRunException with the computed result.

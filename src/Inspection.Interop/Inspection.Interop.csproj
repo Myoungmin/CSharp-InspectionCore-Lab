@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Inspection.Core/Inspection.Core.csproj" />
+    <InternalsVisibleTo Include="Inspection.IntegrationTests" />
+    <Content Include="../../artifacts/native/$(Configuration)/NativeInspection.dll" Link="NativeInspection.dll"
+             CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+  <Target Name="RequireNativeInspection" BeforeTargets="PrepareForBuild">
+    <Error Condition="!Exists('$(MSBuildProjectDirectory)/../../artifacts/native/$(Configuration)/NativeInspection.dll')"
+           Text="NativeInspection.dll is missing. Run scripts/build-native.ps1 -Configuration $(Configuration) first." />
+  </Target>
+</Project>

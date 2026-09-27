@@ -1,0 +1,34 @@
+@startuml native-interop
+!pragma layout smetana
+title M2 synchronous native ownership
+interface IInspector
+class NativeInspector {
+  InspectAsync(job, samples, token)
+  Dispose()
+}
+class NativeInspectorHandle {
+  ReleaseHandle()
+}
+class SafeHandleZeroOrMinusOneIsInvalid
+class NativeMethods {
+  LibraryImport declarations
+}
+class "inspection_handle (C++)" as NativeObject
+NativeInspector ..|> IInspector
+NativeInspector *-- NativeInspectorHandle : owns
+NativeInspectorHandle --|> SafeHandleZeroOrMinusOneIsInvalid
+NativeInspector --> NativeMethods : synchronous Run
+NativeInspectorHandle --> NativeMethods : Destroy
+NativeMethods ..> NativeObject : C ABI create / run / destroy
+note right of NativeInspector
+Host owns the adapter.
+Runner borrows IInspector.
+Input buffer pinned only during Run.
+No worker thread or retained pointer.
+end note
+note bottom of NativeInspectorHandle
+P/Invoke SafeHandle marshaling protects each call.
+Dispose releases deterministically;
+finalization is a fallback.
+end note
+@enduml

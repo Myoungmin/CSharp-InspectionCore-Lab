@@ -10,6 +10,12 @@
         "dependencies": {
           "Inspection.Core": "[1.0.0, )"
         }
+      },
+      "inspection.interop": {
+        "type": "Project",
+        "dependencies": {
+          "Inspection.Core": "[1.0.0, )"
+        }
       }
     }
   }

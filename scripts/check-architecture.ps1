@@ -7,8 +7,10 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 $expected = @{
     'Inspection.Core' = @()
     'Inspection.Infrastructure' = @('Inspection.Core')
-    'Inspection.Host' = @('Inspection.Core', 'Inspection.Infrastructure')
+    'Inspection.Interop' = @('Inspection.Core')
+    'Inspection.Host' = @('Inspection.Core', 'Inspection.Infrastructure', 'Inspection.Interop')
     'Inspection.Tests' = @('Inspection.Core')
+    'Inspection.IntegrationTests' = @('Inspection.Core', 'Inspection.Infrastructure', 'Inspection.Interop')
 }
 $projects = @(Get-ChildItem (Join-Path $repoRoot 'src'), (Join-Path $repoRoot 'tests') -Filter '*.csproj' -Recurse | Sort-Object BaseName)
 if ($projects.Count -ne $expected.Count) { throw 'Unexpected project count. Review the architecture policy.' }
@@ -37,13 +39,18 @@ foreach ($project in $projects) {
         $target = $projects | Where-Object { $_.FullName -eq $reference.FullPath }
         if (-not $target) { throw "Reference outside the known project set: $($reference.FullPath)" }
     }
-    if ($project.BaseName -ne 'Inspection.Tests' -and @($evaluated.Items.PackageReference).Count -gt 0) {
-        throw "M1 production projects must depend only on BCL and the approved project references: $($project.Name)"
+    if ($project.BaseName -notin @('Inspection.Tests', 'Inspection.IntegrationTests') -and @($evaluated.Items.PackageReference).Count -gt 0) {
+        throw "Production projects must depend only on BCL and the approved project references: $($project.Name)"
     }
     foreach ($reference in $references) {
         $lines.Add(('{0} --> {1}' -f $project.BaseName.Replace('.', '_'), $reference.Replace('.', '_')))
     }
 }
+$nativeProject = Join-Path $repoRoot 'native/NativeInspection/NativeInspection.vcxproj'
+[xml]$native = Get-Content -LiteralPath $nativeProject -Raw -Encoding UTF8
+if (@($native.SelectNodes('//*[local-name()="ProjectReference"]')).Count -ne 0) { throw 'NativeInspection must not reference managed projects.' }
+$lines.Add('component "NativeInspection (C++ DLL)" as NativeInspection')
+$lines.Add('Inspection_Interop ..> NativeInspection : C ABI at runtime; no managed ProjectReference')
 $lines.Add('@enduml')
 $generated = ($lines -join "`n") + "`n"
 $path = Join-Path $repoRoot 'docs/diagrams/dependencies.generated.puml'
@@ -53,4 +60,4 @@ if ($Update) {
 elseif (-not (Test-Path -LiteralPath $path) -or [IO.File]::ReadAllText($path).Replace("`r`n", "`n") -cne $generated) {
     throw 'Dependency diagram is stale. Run scripts/check-architecture.ps1 -Update.'
 }
-Write-Host 'Architecture: four projects, evaluated references and framework/platform passed.'
+Write-Host 'Architecture: six managed projects and one native project; reference rules and framework/platform passed.'

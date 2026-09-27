@@ -1,15 +1,18 @@
 @startuml run-sequence
-title M2 successful inspection and persistence boundary
+title M3a successful admission, inspection and persistence
 actor User
 participant Host
+participant InspectionEngine as Engine
 participant InspectionRunner as Runner
 participant IDevice as Device
 participant IInspector as Inspector
 participant "NativeInspection.dll" as DLL
 participant IResultStore as Store
 User -> Host : run pass or fail scenario
-Host -> Runner : RunAsync(job, token)
-Runner -> Runner : create RunId
+Host -> Engine : Start(job, timeout)
+Engine -> Engine : reserve slot / create RunId
+Engine --> Host : Accepted + handle.Completion
+Engine ->> Runner : run with admitted RunId and owned token
 Runner -> Device : PrepareAsync(job, token)
 Device --> Runner : ready
 Runner -> Device : AcquireAsync(job, token)
@@ -21,19 +24,24 @@ DLL --> Inspector : status + counts + raw score
 Inspector -> Inspector : validate result / convert errors
 end
 Inspector --> Runner : assessment (Pass or Fail)
-Runner -> Runner : atomically enter persistence
+Runner -> Engine : enter persistence under shared lock
+Engine --> Runner : Persisting
 note right of Runner : cancellation accepted before this point prevents saving
 Runner -> Store : SaveAsync(result, CancellationToken.None)
 Store -> Store : write temporary file, then rename
 Store --> Runner : persisted
-Runner --> Host : InspectionResult
+Runner --> Engine : InspectionResult
+Engine -> Engine : close stop admission / finish callbacks and timer cleanup
+Engine -> Engine : Succeeded / release slot / complete handle
+Engine --> Host : await handle.Completion
 Host --> User : Succeeded + RunId + verdict + result path
+Host -> Engine : await DisposeAsync()
 opt native inspector selected
 Host -> Inspector : Dispose()
 Inspector -> DLL : inspection_destroy(handle) via SafeHandle
 end
 note over Runner, Store
-Late caller cancellation cannot replace storage outcome.
+Late cancellation or timeout cannot replace storage outcome.
 Save failure throws InspectionRunException with the computed result.
 end note
 @enduml

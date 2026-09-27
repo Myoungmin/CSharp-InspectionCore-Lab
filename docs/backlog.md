@@ -5,11 +5,11 @@
 | ID | 상태·내용 | 영향과 보류 이유 | 재검토 조건 | 완료 증거 |
 | --- | --- | --- | --- | --- |
 | B01 | Planned — .NET 10 이전 | 현재 도구를 유지하기로 한 [ADR-0002](adr/0002-windows-x64-toolchain.md) 적용 | 로드맵의 지원 종료 전 이전 일정에 맞춰 별도 착수 | 새 ADR, IDE·SDK 호환성, 전체 검증 |
-| B02 | Planned — Native 비동기 종료 | M2 동기 호출 중에는 협조적 중단·콜백을 제공하지 않음 | M3b 시작 | Start/Stop/Wait/Destroy, 실제 종료·콜백·해제 경합 검증 |
+| B02 | Planned — Native 비동기 종료 | M3a에도 M2 Native는 동기식이며 Engine은 실제 반환을 기다림 | M3a 완료 후 M3b 시작 | Start/Stop/Wait/Destroy, 실제 종료·콜백·해제 경합 검증 |
 | B03 | Deferred — Codex 반복 제어기 | 현재는 검증 스크립트와 수동 개발 흐름이며 제어기는 없음 | Native·M3 검증 흐름 안정 후 별도 요청 | 예산·동일 실패 중단, 별도 리뷰, 보호된 기준 검증, JSON 보고서 |
 | B04 | Deferred — CI와 증거 보관 | 검증 로그는 현재 로컬 artifacts에만 있음 | 원격 CI 구성 작업 시 | 고정 MSVC·SDK·Java·PlantUML 준비, 새 checkout 검증, TRX·요약·로그 보관 |
 | B05 | Deferred — 편집·스타일 규칙 | 개행은 gitattributes로 고정했으나 editorconfig는 없음 | 기능 변경과 분리한 정리 작업 시 | 기존 스타일을 반영한 최소 설정과 필요한 검사 |
-| B06 | Planned — 장애 대응 기록 | 오류 진단은 로그·실습 문서에 분산됨 | M3 종료·타임아웃 사례부터 | 실제 증상·원인·복구·회귀 테스트 연결 |
+| B06 | Planned — 장애 대응 기록 | M3a 시간 초과·StopError는 [Engine 계약](engine-contract.md)과 테스트에 정리함 | M3b에서 실제 Native 종료 장애를 재현할 때 별도 대응 기록 추가 | 실제 증상·원인·복구·회귀 테스트 연결 |
 | B07 | Planned — IPC 호환성과 재전송 범위 | 아직 프로토콜 구현 없음 | M4 시작 | 프로토콜 ADR, 크기·버전·오류·중복 요청·재접속 테스트 |
 
 매 작업 시작·종료 시 관련 항목만 재검토한다. 일정 도래, 계약 변경, 실제 장애 등 재검토 조건을 구체적으로 적고 단순히 '나중에'로 두지 않는다. 사용자 학습 미확인은 작업·실습 기록에서 관리한다.

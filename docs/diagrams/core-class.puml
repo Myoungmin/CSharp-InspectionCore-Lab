@@ -17,6 +17,20 @@ class InspectionAssessment {
 class InspectionRunner {
   RunAsync(job, cancellationToken)
 }
+class InspectionEngine {
+  Start(job, timeout)
+  GetStatus() / GetRun(runId)
+  CancelRun(runId)
+  DisposeAsync()
+}
+class InspectionRunHandle {
+  RunId / JobId
+  Completion
+}
+class InspectionRunSnapshot {
+  State / Stage / StopReason
+  ComputedResult / Error / StopError
+}
 interface IDevice {
   PrepareAsync(job, token)
   AcquireAsync(job, token)
@@ -28,6 +42,10 @@ interface IResultStore {
   SaveAsync(result, token)
 }
 InspectionRunner --> IDevice : borrows
+InspectionEngine --> InspectionRunner : borrows / one active run
+InspectionEngine ..> InspectionRunHandle : admission
+InspectionEngine ..> InspectionRunSnapshot : immutable snapshot
+InspectionRunHandle ..> InspectionRunSnapshot : completion result
 InspectionRunner --> IInspector : borrows
 InspectionRunner --> IResultStore : borrows
 InspectionRunner ..> InspectionJob

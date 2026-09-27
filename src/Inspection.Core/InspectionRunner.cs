@@ -18,33 +18,44 @@ public sealed class InspectionRunner
     public async Task<InspectionResult> RunAsync(InspectionJob job, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(job);
-        Guid runId = Guid.NewGuid();
+        using var boundary = new PersistenceBoundary(cancellationToken);
+        return await RunAsync(job, Guid.NewGuid(), _ => boundary.EnterPersistence(), null, cancellationToken).ConfigureAwait(false);
+    }
+
+    internal async Task<InspectionResult> RunAsync(InspectionJob job, Guid runId,
+        Action<InspectionResult> enterPersistence, Action<InspectionStage>? reportStage, CancellationToken cancellationToken)
+    {
         DateTimeOffset startedAt = _timeProvider.GetUtcNow();
         InspectionStage stage = InspectionStage.Prepare;
         InspectionResult? computedResult = null;
-        using var boundary = new PersistenceBoundary(cancellationToken);
+        bool persisting = false;
 
         try
         {
+            reportStage?.Invoke(stage);
             cancellationToken.ThrowIfCancellationRequested();
             await _device.PrepareAsync(job, cancellationToken).ConfigureAwait(false);
 
             stage = InspectionStage.Acquire;
+            reportStage?.Invoke(stage);
             cancellationToken.ThrowIfCancellationRequested();
             double[] samples = await _device.AcquireAsync(job, cancellationToken).ConfigureAwait(false);
 
             stage = InspectionStage.Inspect;
+            reportStage?.Invoke(stage);
             cancellationToken.ThrowIfCancellationRequested();
             InspectionAssessment assessment = await _inspector.InspectAsync(job, samples, cancellationToken).ConfigureAwait(false);
             computedResult = new InspectionResult(runId, job.JobId, startedAt, _timeProvider.GetUtcNow(), assessment);
 
             // Once persistence wins, late caller cancellation cannot change the outcome.
-            boundary.EnterPersistence();
+            enterPersistence(computedResult);
+            persisting = true;
             stage = InspectionStage.Persist;
+            reportStage?.Invoke(stage);
             await _store.SaveAsync(computedResult, CancellationToken.None).ConfigureAwait(false);
             return computedResult;
         }
-        catch (OperationCanceledException exception) when (cancellationToken.IsCancellationRequested && !boundary.IsPersisting)
+        catch (OperationCanceledException exception) when (cancellationToken.IsCancellationRequested && !persisting)
         {
             throw new InspectionCanceledException(runId, stage, exception, cancellationToken);
         }
@@ -68,8 +79,6 @@ public sealed class InspectionRunner
             _token = token;
             _registration = token.Register(() => Interlocked.CompareExchange(ref _state, Canceled, Open));
         }
-
-        public bool IsPersisting => Volatile.Read(ref _state) == Persisting;
 
         public void EnterPersistence()
         {

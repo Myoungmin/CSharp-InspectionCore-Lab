@@ -6,8 +6,9 @@
 | --- | --- | --- |
 | [M01 — 기반과 한 건 실행](M01-run-one-job.md) | Verified | [M1 실습](../docs/practice-M01.md), 기준 커밋 9f0a24c |
 | [M02 — Native 검사기](M02-native-inspector.md) | Verified | [M2 실습](../docs/practice-M02.md) |
-| [DEV01 — 지속 개발 구조](DEV01-development-workflow.md) | Verified | 필수 42개 사례와 전체 검증 통과, 상세 증거는 작업 기록 |
-| M3a — 단일 실행 제어 | Planned | DEV01 커밋 이후 접수·Busy·상태·취소·타임아웃 구현 |
+| [DEV01 — 지속 개발 구조](DEV01-development-workflow.md) | Verified | 필수 42개 사례와 전체 검증 통과, M2와 함께 7e4f269 커밋 |
+| [M3a — 단일 실행 제어](M03a-single-run-engine.md) | Verified | [M3a 실습](../docs/practice-M03a.md), 총 67개 필수 사례와 전체 검증 통과 |
+| M3b — Native 비동기 종료 | Planned | [B02](../docs/backlog.md)의 작업·콜백 종료와 해제 계약 구체화 |
 
 ## 공통 완료 기준
 

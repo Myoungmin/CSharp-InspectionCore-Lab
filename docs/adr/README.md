@@ -29,6 +29,8 @@ ADR(Architecture Decision Record)은 **무엇을, 왜 선택했고 어떤 대가
 | [0003 — 저장 완료와 취소의 경계](0003-persistence-completion-boundary.md) | Accepted | M1 Runner 한 건 |
 | [0004 — RunId별 JSON 저장](0004-json-result-storage.md) | Accepted | M1/M2 |
 | [0005 — C ABI와 LibraryImport 어댑터](0005-native-c-abi-adapter.md) | Accepted | M2 동기식 Native 검사 |
+| [0006 — 단일 실행 접수와 조회](0006-single-run-engine.md) | Accepted | M3a Engine |
+| [0007 — 종료 원인과 실제 완료](0007-stop-and-completion-arbitration.md) | Accepted | M3a 취소·타임아웃·종료 |
 
 ## 검증 범위
 

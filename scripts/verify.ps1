@@ -11,7 +11,7 @@ $powershell = Join-Path $PSHOME 'powershell.exe'
 $verificationId = [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssZ') + '-' + [Guid]::NewGuid().ToString('N').Substring(0, 8)
 $outputDir = Join-Path $repoRoot "artifacts/verification/$verificationId"
 New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
-$summary = [ordered]@{ milestone = 'M2'; verificationId = $verificationId; status = 'Failed'; baselineCommit = $null; sourceHash = $null; nativeDllHash = $null; testsPassed = 0; integrationTestsPassed = 0; nativeTestsPassed = 0; smokeCases = @(); steps = @(); error = $null }
+$summary = [ordered]@{ milestone = 'M3a'; verificationId = $verificationId; status = 'Failed'; baselineCommit = $null; sourceHash = $null; nativeDllHash = $null; testsPassed = 0; integrationTestsPassed = 0; nativeTestsPassed = 0; smokeCases = @(); steps = @(); error = $null }
 
 function Get-SourceSnapshot {
     $paths = @(& git -C $repoRoot -c core.quotepath=false ls-files --cached --others --exclude-standard | Sort-Object -Unique)
@@ -65,9 +65,9 @@ try {
     [xml]$trx = [IO.File]::ReadAllText($trxPath)
     $counters = $trx.TestRun.ResultSummary.Counters
     $testResults = @($trx.TestRun.Results.UnitTestResult)
-    if ([int]$counters.total -lt 19 -or [int]$counters.executed -ne [int]$counters.total -or
+    if ([int]$counters.total -lt 44 -or [int]$counters.executed -ne [int]$counters.total -or
         [int]$counters.passed -ne [int]$counters.total -or @($testResults | Where-Object { $_.outcome -ne 'Passed' }).Count -gt 0) {
-        throw 'M1 requires at least 19 executed, passing tests with no skipped or failed results.'
+        throw 'M3a requires at least 44 executed, passing Core tests (19 existing + 25 engine), with no skipped or failed results.'
     }
     $summary.testsPassed = [int]$counters.passed
 
@@ -132,6 +132,14 @@ try {
     }
     $null = Invoke-Step 'host-invalid-arguments' $dotnet @($hostDll, '--scenario', 'unknown') -ExpectedExitCode 2 -TimeoutSeconds 30
     $null = Invoke-Step 'host-invalid-inspector' $dotnet @($hostDll, '--inspector', 'unknown') -ExpectedExitCode 2 -TimeoutSeconds 30
+    $null = Invoke-Step 'host-invalid-timeout' $dotnet @($hostDll, '--timeout-ms', '-2') -ExpectedExitCode 2 -TimeoutSeconds 30
+    foreach ($inspector in @('managed', 'native')) {
+        $timeoutDir = Join-Path $outputDir "timeout-$inspector"
+        $timedOut = Invoke-Step "host-timeout-$inspector" $dotnet @($hostDll, '--inspector', $inspector, '--timeout-ms', '0', '--output', $timeoutDir) -ExpectedExitCode 124 -TimeoutSeconds 30
+        if ($timedOut.Stderr -notmatch 'RunId=[0-9a-fA-F-]{36} Status=TimedOut Stage=Prepare Reason=Timeout' -or $timedOut.Stdout -match 'Succeeded' -or (Test-Path -LiteralPath $timeoutDir)) {
+            throw 'An immediate timeout must finish as TimedOut without acquiring or persisting a result.'
+        }
+    }
     $missingDllDir = Join-Path $outputDir 'missing native dll'
     New-Item -ItemType Directory -Path $missingDllDir | Out-Null
     Get-ChildItem -LiteralPath (Split-Path -Parent $hostDll) -File | Where-Object { $_.Name -ne 'NativeInspection.dll' } | Copy-Item -Destination $missingDllDir

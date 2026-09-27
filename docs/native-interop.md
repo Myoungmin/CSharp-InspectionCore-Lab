@@ -25,7 +25,7 @@ NativeFaultMode의 ThrowOnCreate/ThrowOnInspect는 가상 DLL의 예외 경계 �
 
 Host가 NativeInspector를 using으로 해제하고, 내부 SafeHandle이 Native 객체를 소유한다. LibraryImport의 SafeHandle 인자 마샬링은 호출 동안 핸들을 유지한다. Dispose는 중복 호출 가능하며 해제 후 새 InspectAsync는 ObjectDisposedException이다. GC에 의한 SafeHandle 정리는 예외적인 누락에 대비한 보조 수단이다.
 
-M2의 InspectAsync는 인터페이스 형태를 유지하지만 내부 Native 호출은 동기식이다. 취소는 호출 전과 실제 반환 후에 확인한다. Task.Run이나 대기 취소를 Native 중단으로 취급하지 않는다. 장시간 Native 작업의 협조적 중단·Wait·콜백 종료·Dispose 경합 검증은 M3b에서 수행한다.
+M2의 InspectAsync는 인터페이스 형태를 유지하지만 내부 Native 호출은 동기식이다. 취소는 호출 전과 실제 반환 후에 확인한다. M3a Engine이 ThreadPool에서 Runner를 실행해 접수 API 반환을 보장하며, 실제 호출이 반환될 때까지 Busy를 유지한다. Task.Run이나 대기 취소를 Native 중단으로 취급하지 않는다. 장시간 Native 작업의 협조적 중단·Wait·Native 콜백 종료·Dispose 경합 검증은 M3b에서 수행한다. [Engine 계약](engine-contract.md)을 함께 읽는다.
 
 ## 빌드와 검증
 

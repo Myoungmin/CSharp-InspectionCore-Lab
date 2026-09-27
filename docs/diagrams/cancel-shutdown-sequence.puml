@@ -1,0 +1,46 @@
+@startuml cancel-shutdown-sequence
+title M3a stop request, actual return and Host-owned disposal
+actor User
+participant Host
+participant InspectionEngine as Engine
+participant InspectionRunner as Runner
+participant IInspector as Inspector
+participant CancellationTokenSource as CTS
+participant "Token callbacks" as Callbacks
+participant "Timeout timer" as Timer
+Runner -> Inspector : InspectAsync(job, samples, token)
+User -> Engine : CancelRun(runId)
+Engine -> Engine : first reason wins shared lock / CancelRequested
+Engine -> CTS : CancelAsync()
+CTS --> Engine : delivery task (token already canceled)
+CTS ->> Callbacks : dispatch registered callbacks
+Engine --> User : Accepted (still Busy)
+note over Inspector, Callbacks
+M2 native inspection is synchronous and returns on its own.
+Token cancellation is not native stop completion.
+end note
+Inspector --> Runner : actual return (result or exception)
+opt assessment returned
+Runner -> Engine : persistence boundary if result returned
+Engine --> Runner : reject persistence when stop already accepted
+end
+Runner --> Engine : actual runner return / error
+Engine -> Engine : close completion arbitration
+Engine -> CTS : await callback delivery
+Callbacks --> CTS : callbacks finished
+CTS --> Engine : complete (or callback error)
+Engine -> Timer : await DisposeAsync()
+Engine -> CTS : Dispose()
+Engine -> Engine : finalize Canceled/TimedOut (or Faulted)
+Engine -> Engine : release slot / complete handle
+Engine --> Host : completed snapshot
+Host -> Engine : await DisposeAsync()
+Engine --> Host : Disposed
+Host -> Inspector : Dispose owned adapter
+note over Host, Engine
+If Host disposes during a run: close new admission,
+request Shutdown, then wait for the same completion.
+Persisting rejects late stop requests and must finish saving.
+Native Start/RequestStop/Wait and native callbacks arrive in M3b.
+end note
+@enduml

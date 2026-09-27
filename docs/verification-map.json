@@ -312,6 +312,221 @@
                                        ],
                              "source":  "tests/Inspection.IntegrationTests/NativeInspectorTests.cs",
                              "adr":  "docs/adr/0005-native-c-abi-adapter.md"
+                         },
+                         {
+                             "id":  "M3A-001",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionEngineTests",
+                             "method":  "AcceptedCancellation_PreservesCauseAndRacingFaultForDiagnostics",
+                             "cases":  [
+                                           "AcceptedCancellation_PreservesCauseAndRacingFaultForDiagnostics"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionEngineTests.cs",
+                             "adr":  "docs/adr/0007-stop-and-completion-arbitration.md"
+                         },
+                         {
+                             "id":  "M3A-002",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionEngineTests",
+                             "method":  "AcceptedRun_PublishesSameRunIdOnlyAfterStorage",
+                             "cases":  [
+                                           "AcceptedRun_PublishesSameRunIdOnlyAfterStorage(0,Pass)",
+                                           "AcceptedRun_PublishesSameRunIdOnlyAfterStorage(1,Fail)"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionEngineTests.cs",
+                             "adr":  "docs/adr/0007-stop-and-completion-arbitration.md"
+                         },
+                         {
+                             "id":  "M3A-003",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionEngineTests",
+                             "method":  "Cancel_IgnoringDependencyKeepsSlotUntilActualReturn",
+                             "cases":  [
+                                           "Cancel_IgnoringDependencyKeepsSlotUntilActualReturn"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionEngineTests.cs",
+                             "adr":  "docs/adr/0007-stop-and-completion-arbitration.md"
+                         },
+                         {
+                             "id":  "M3A-004",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionEngineTests",
+                             "method":  "CancellationAtInspectionReturn_PreventsPersistence",
+                             "cases":  [
+                                           "CancellationAtInspectionReturn_PreventsPersistence"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionEngineTests.cs",
+                             "adr":  "docs/adr/0007-stop-and-completion-arbitration.md"
+                         },
+                         {
+                             "id":  "M3A-005",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionEngineTests",
+                             "method":  "CancellationCallbacks_MustFinishBeforeCompletionAndSlotRelease",
+                             "cases":  [
+                                           "CancellationCallbacks_MustFinishBeforeCompletionAndSlotRelease"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionEngineTests.cs",
+                             "adr":  "docs/adr/0007-stop-and-completion-arbitration.md"
+                         },
+                         {
+                             "id":  "M3A-006",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionEngineTests",
+                             "method":  "ConcurrentStarts_AdmitExactlyOneWithoutQueuing",
+                             "cases":  [
+                                           "ConcurrentStarts_AdmitExactlyOneWithoutQueuing"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionEngineTests.cs",
+                             "adr":  "docs/adr/0007-stop-and-completion-arbitration.md"
+                         },
+                         {
+                             "id":  "M3A-007",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionEngineTests",
+                             "method":  "Dispose_StopsAdmissionAndWaitsWithoutDisposingBorrowedDependencies",
+                             "cases":  [
+                                           "Dispose_StopsAdmissionAndWaitsWithoutDisposingBorrowedDependencies"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionEngineTests.cs",
+                             "adr":  "docs/adr/0007-stop-and-completion-arbitration.md"
+                         },
+                         {
+                             "id":  "M3A-008",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionEngineTests",
+                             "method":  "DisposeDuringPersistence_WaitsForSavedOutcome",
+                             "cases":  [
+                                           "DisposeDuringPersistence_WaitsForSavedOutcome"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionEngineTests.cs",
+                             "adr":  "docs/adr/0007-stop-and-completion-arbitration.md"
+                         },
+                         {
+                             "id":  "M3A-009",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionEngineTests",
+                             "method":  "DisposeIdle_IsIdempotentAndRejectsAdmission",
+                             "cases":  [
+                                           "DisposeIdle_IsIdempotentAndRejectsAdmission"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionEngineTests.cs",
+                             "adr":  "docs/adr/0007-stop-and-completion-arbitration.md"
+                         },
+                         {
+                             "id":  "M3A-010",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionEngineTests",
+                             "method":  "ExecutionFailure_IsFaultedAndAllowsAnotherRun",
+                             "cases":  [
+                                           "ExecutionFailure_IsFaultedAndAllowsAnotherRun"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionEngineTests.cs",
+                             "adr":  "docs/adr/0007-stop-and-completion-arbitration.md"
+                         },
+                         {
+                             "id":  "M3A-011",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionEngineTests",
+                             "method":  "FirstStopReason_WinsUserCancellationTimeoutRace",
+                             "cases":  [
+                                           "FirstStopReason_WinsUserCancellationTimeoutRace(False)",
+                                           "FirstStopReason_WinsUserCancellationTimeoutRace(True)"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionEngineTests.cs",
+                             "adr":  "docs/adr/0007-stop-and-completion-arbitration.md"
+                         },
+                         {
+                             "id":  "M3A-012",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionEngineTests",
+                             "method":  "InvalidTimeout_DoesNotReserveSlot",
+                             "cases":  [
+                                           "InvalidTimeout_DoesNotReserveSlot(-2)",
+                                           "InvalidTimeout_DoesNotReserveSlot(4294967295)"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionEngineTests.cs",
+                             "adr":  "docs/adr/0007-stop-and-completion-arbitration.md"
+                         },
+                         {
+                             "id":  "M3A-013",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionEngineTests",
+                             "method":  "Persisting_RejectsCancelAndTimeoutAndPreservesStorageOutcome",
+                             "cases":  [
+                                           "Persisting_RejectsCancelAndTimeoutAndPreservesStorageOutcome(False)",
+                                           "Persisting_RejectsCancelAndTimeoutAndPreservesStorageOutcome(True)"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionEngineTests.cs",
+                             "adr":  "docs/adr/0007-stop-and-completion-arbitration.md"
+                         },
+                         {
+                             "id":  "M3A-014",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionEngineTests",
+                             "method":  "PreviousRunAndLateTimer_CannotCancelNextRun",
+                             "cases":  [
+                                           "PreviousRunAndLateTimer_CannotCancelNextRun"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionEngineTests.cs",
+                             "adr":  "docs/adr/0007-stop-and-completion-arbitration.md"
+                         },
+                         {
+                             "id":  "M3A-015",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionEngineTests",
+                             "method":  "Status_ReportsStageOfActualBlockedWork",
+                             "cases":  [
+                                           "Status_ReportsStageOfActualBlockedWork(Acquire)",
+                                           "Status_ReportsStageOfActualBlockedWork(Inspect)",
+                                           "Status_ReportsStageOfActualBlockedWork(Prepare)"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionEngineTests.cs",
+                             "adr":  "docs/adr/0007-stop-and-completion-arbitration.md"
+                         },
+                         {
+                             "id":  "M3A-016",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionEngineTests",
+                             "method":  "ThrowingCancellationCallback_FaultsEngineAndRejectsNewRuns",
+                             "cases":  [
+                                           "ThrowingCancellationCallback_FaultsEngineAndRejectsNewRuns"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionEngineTests.cs",
+                             "adr":  "docs/adr/0007-stop-and-completion-arbitration.md"
+                         },
+                         {
+                             "id":  "M3A-017",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionEngineTests",
+                             "method":  "Timeout_UsesControlledTimeAndWaitsForActualReturn",
+                             "cases":  [
+                                           "Timeout_UsesControlledTimeAndWaitsForActualReturn"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionEngineTests.cs",
+                             "adr":  "docs/adr/0007-stop-and-completion-arbitration.md"
+                         },
+                         {
+                             "id":  "M3A-018",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionEngineTests",
+                             "method":  "TimerSetupFailure_DoesNotLeaveEngineBusy",
+                             "cases":  [
+                                           "TimerSetupFailure_DoesNotLeaveEngineBusy"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionEngineTests.cs",
+                             "adr":  "docs/adr/0007-stop-and-completion-arbitration.md"
+                         },
+                         {
+                             "id":  "M3A-019",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionEngineTests",
+                             "method":  "ZeroTimeout_DoesNotCallDevice",
+                             "cases":  [
+                                           "ZeroTimeout_DoesNotCallDevice"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionEngineTests.cs",
+                             "adr":  "docs/adr/0007-stop-and-completion-arbitration.md"
                          }
                      ]
 }

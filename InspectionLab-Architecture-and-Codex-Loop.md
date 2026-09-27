@@ -1,6 +1,6 @@
 # InspectionLab — 아키텍처와 Codex 개발 루프 제안
 
-작성일: 2026-09-26. 구현 착수: 2026-09-27. 이 문서는 전체 단계의 설계이며, 현재 구현 범위는 M3b까지다. 현재 코드의 계약은 [아키텍처](docs/architecture.md), [Native ABI](docs/native-interop.md), [Engine 계약](docs/engine-contract.md)에 있다. 실제 증거는 [M1 기록](docs/practice-M01.md), [M2 기록](docs/practice-M02.md), [M3a 기록](docs/practice-M03a.md), [M3b 기록](docs/practice-M03b.md)에서 구분한다. M3c 이후와 Codex 자동 반복 제어기는 후속 계획이다. 기존 학습 진도를 구현 완료로 변경하지 않는다.
+작성일: 2026-09-26. 구현 착수: 2026-09-27. 이 문서는 전체 단계의 설계이며, 현재 구현 범위는 M3c까지다. 현재 코드의 계약은 [아키텍처](docs/architecture.md), [Native ABI](docs/native-interop.md), [Engine 계약](docs/engine-contract.md)에 있다. 실제 증거는 [M1 기록](docs/practice-M01.md), [M2 기록](docs/practice-M02.md), [M3a 기록](docs/practice-M03a.md), [M3b 기록](docs/practice-M03b.md), [M3c 기록](docs/practice-M03c.md)에서 구분한다. M4 이후와 Codex 자동 반복 제어기는 후속 계획이다. 기존 학습 진도를 구현 완료로 변경하지 않는다.
 
 ## 1. 목표와 근거
 
@@ -147,7 +147,7 @@ M0·M1을 첫 실행 목표로 묶는다. M0의 빈 테스트는 미구현으로
 | cancel-shutdown-sequence.puml | 취소 후 언제 자원을 해제하는가? | 종료·콜백 수명 변경 |
 | run-state.puml | 허용되는 상태 전이는 무엇인가? | 상태·전이 규칙 변경 |
 
-M0는 상위 구조·실제 참조 관계, M1은 핵심 타입·정상 실행, M2는 Native 소유권 다이어그램을 둔다. M3a에 실행 State Diagram과 관리 취소·종료 Sequence Diagram을 추가했다. M3b에서 Native 작업·진행 콜백의 join과 종료 미확인 시 자원 보존을 해당 그림에 반영했다.
+M0는 상위 구조·실제 참조 관계, M1은 핵심 타입·정상 실행, M2는 Native 소유권 다이어그램을 둔다. M3a에 실행 State Diagram과 관리 취소·종료 Sequence Diagram을 추가했다. M3b에서 Native 작업·진행 콜백의 join과 종료 미확인 시 자원 보존을 해당 그림에 반영했다. M3c는 자동 예약·중지·현재 취소 흐름 그림을 추가했다.
 
 자동화는 두 부분으로 나눈다.
 

@@ -10,6 +10,6 @@
 | B04 | Deferred — CI와 증거 보관 | 검증 로그는 현재 로컬 artifacts에만 있음 | 원격 CI 구성 작업 시 | 고정 MSVC·SDK·Java·PlantUML 준비, 새 checkout 검증, TRX·요약·로그 보관 |
 | B05 | Deferred — 편집·스타일 규칙 | 개행은 gitattributes로 고정했으나 editorconfig는 없음 | 기능 변경과 분리한 정리 작업 시 | 기존 스타일을 반영한 최소 설정과 필요한 검사 |
 | B06 | Verified — 장애 대응 기록 | 실제 Native Stop/Wait 오류와 콜백 경합 재현 | M3b 재현·검증 완료; M5 운영 진단에서 확장 | [장애 대응](troubleshooting.md), [M3b 작업](../tasks/M03b-native-lifetime.md) |
-| B07 | Planned — IPC 호환성과 재전송 범위 | 아직 프로토콜 구현 없음 | M4 시작 | 프로토콜 ADR, 크기·버전·오류·중복 요청·재접속 테스트 |
+| B07 | Planned — IPC 호환성과 재전송 범위 | 아직 프로토콜 구현 없음 | M3c 완료 후 다음 M4 작업 시작 | 프로토콜 ADR, 크기·버전·오류·중복 요청·재접속 테스트 |
 
 매 작업 시작·종료 시 관련 항목만 재검토한다. 일정 도래, 계약 변경, 실제 장애 등 재검토 조건을 구체적으로 적고 단순히 '나중에'로 두지 않는다. 사용자 학습 미확인은 작업·실습 기록에서 관리한다.

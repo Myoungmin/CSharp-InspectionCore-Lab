@@ -1,5 +1,5 @@
 @startuml run-sequence
-title M3b successful admission, inspection and persistence
+title M3c one successful run (manual or admitted by auto session)
 actor User
 participant Host
 participant InspectionEngine as Engine

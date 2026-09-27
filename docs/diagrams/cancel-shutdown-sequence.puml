@@ -1,5 +1,5 @@
 @startuml cancel-shutdown-sequence
-title M3b stop request, native join and Host-owned disposal
+title M3c current run stop, native join and Host-owned disposal
 actor User
 participant Host
 participant InspectionEngine as Engine
@@ -43,6 +43,7 @@ Inspector -> DLL : Destroy via SafeHandle
 end
 note over Host, Engine
 Host shutdown closes admission and requests Shutdown before waiting.
+It also stops automatic scheduling and awaits auto session cleanup.
 Persistence already entered must finish saving.
 Termination failure permanently blocks admission.
 Unconfirmed Wait completion means managed failure arbitration, not native termination.

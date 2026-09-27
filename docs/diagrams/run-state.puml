@@ -1,6 +1,6 @@
 @startuml run-state
 !pragma layout smetana
-title M3b admitted run states (no queue)
+title M3c admitted run states (same path for manual and automatic)
 [*] --> Running : slot reserved / Accepted
 Running --> CancelRequested : first UserCancellation / Timeout / Shutdown
 Running --> Persisting : persistence wins shared lock
@@ -31,5 +31,7 @@ Unconfirmed Wait: resources retained; TerminationConfirmed=false.
 Completion then means failure arbitration, not native termination.
 Faulted survives Dispose; normal lifetime ends in Disposed.
 Ready and IsBusy describe different properties.
+Mode=Automatic reserves admission even while IsBusy=false.
+StopAuto affects scheduling; CancelRun affects this state machine.
 end note
 @enduml

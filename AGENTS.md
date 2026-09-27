@@ -1,11 +1,12 @@
 # Repository instructions
 
-- Current implemented milestone: M3b. Follow the accepted roadmap in `InspectionLab-Architecture-and-Codex-Loop.md`; implement one requested milestone/task at a time.
+- Current implemented milestone: M3c. Follow the accepted roadmap in `InspectionLab-Architecture-and-Codex-Loop.md`; implement one requested milestone/task at a time.
 - Start tasks from `tasks/template.md`; keep `tasks/README.md` status/evidence and relevant `docs/backlog.md` revisit conditions current. Use the shared completion criteria and distinguish verified implementation from learning progress.
 - Core declares the device, inspector and storage ports. Core must not reference Infrastructure, Host, IPC DTOs or native imports.
 - Host composes dependencies and owns their lifetime. Runner borrows dependencies. Keep JobId separate from RunId.
 - Product Fail is a successful inspection outcome. Persistence must finish before reporting execution success. Preserve computed results for persistence diagnostics.
 - Engine admission, first stop cause, persistence entry and completion arbitration share one lock. Do not run external callbacks inline under it. Keep the slot busy until the runner and cancellation callbacks actually finish; await engine disposal before disposing Host-owned adapters. Native Start copies input; Wait must join work and callbacks before release. Termination failure faults the engine and blocks admission; an unconfirmed Wait retains its handle and callback context until process exit (ADR-0009).
+- Auto sessions reserve admission while running, waiting and stopping. StopAuto cancels scheduling only; CancelRun targets the current RunId. Reuse the same run path and continue only after Succeeded, including product Fail. Follow ADR-0010 for auto outcome and disposal rules.
 - Use standard .NET naming and English identifiers/comments in code. Explain learning points in Korean documentation.
 - Use .NET SDK 9.0.305, net9.0 and x64 until the explicit toolchain migration task. Commit package lock files.
 - Required verification: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify.ps1`.
@@ -16,4 +17,4 @@
 - Changes to acceptance criteria, test counts or verification policies require an explanation in the task record, not silent weakening.
 - Maintain `docs/verification-map.json` when required scenarios change. Verification checks exact class/method/data-case identities in TRX as well as test counts. Never regenerate this baseline automatically from candidate test results.
 - Record actual build/test evidence separately from the user's demonstrated understanding. Historical learning files outside this repository are reference material.
-- The autonomous Codex retry controller remains a separate follow-up after the verification flow is stable; it is not implemented in M3b.
+- The autonomous Codex retry controller remains a separate follow-up after the verification flow is stable; it is not implemented in M3c.

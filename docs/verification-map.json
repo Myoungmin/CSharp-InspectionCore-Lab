@@ -647,6 +647,219 @@
                                        ],
                              "source":  "tests/Inspection.Tests/TerminationFailureTests.cs",
                              "adr":  "docs/adr/0009-termination-failure-quarantine.md"
+                         },
+                         {
+                             "id":  "M3C-001",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionAutoTests",
+                             "method":  "FiniteSequence_PersistsEveryRunWithDistinctRunIds",
+                             "cases":  [
+                                           "FiniteSequence_PersistsEveryRunWithDistinctRunIds (0,Pass)",
+                                           "FiniteSequence_PersistsEveryRunWithDistinctRunIds (1,Fail)"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionAutoTests.cs",
+                             "adr":  "docs/adr/0010-sequential-auto-admission.md"
+                         },
+                         {
+                             "id":  "M3C-002",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionAutoTests",
+                             "method":  "Interval_StartsAfterPersistenceAndReservesManualAdmissionWhileWaiting",
+                             "cases":  [
+                                           "Interval_StartsAfterPersistenceAndReservesManualAdmissionWhileWaiting"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionAutoTests.cs",
+                             "adr":  "docs/adr/0010-sequential-auto-admission.md"
+                         },
+                         {
+                             "id":  "M3C-003",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionAutoTests",
+                             "method":  "ConcurrentManualAndAutoStarts_AdmitExactlyOne",
+                             "cases":  [
+                                           "ConcurrentManualAndAutoStarts_AdmitExactlyOne (False)",
+                                           "ConcurrentManualAndAutoStarts_AdmitExactlyOne (True)"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionAutoTests.cs",
+                             "adr":  "docs/adr/0010-sequential-auto-admission.md"
+                         },
+                         {
+                             "id":  "M3C-004",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionAutoTests",
+                             "method":  "StopAuto_DrainsCurrentRunWithoutCancelingIt",
+                             "cases":  [
+                                           "StopAuto_DrainsCurrentRunWithoutCancelingIt (Inspect)",
+                                           "StopAuto_DrainsCurrentRunWithoutCancelingIt (Persist)"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionAutoTests.cs",
+                             "adr":  "docs/adr/0010-sequential-auto-admission.md"
+                         },
+                         {
+                             "id":  "M3C-005",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionAutoTests",
+                             "method":  "StopWaitingAndStaleCommands_CannotAffectManualOrNewAutoRun",
+                             "cases":  [
+                                           "StopWaitingAndStaleCommands_CannotAffectManualOrNewAutoRun"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionAutoTests.cs",
+                             "adr":  "docs/adr/0010-sequential-auto-admission.md"
+                         },
+                         {
+                             "id":  "M3C-006",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionAutoTests",
+                             "method":  "StopAfterNextAdmission_KeepsThatRunAndPreventsAnother",
+                             "cases":  [
+                                           "StopAfterNextAdmission_KeepsThatRunAndPreventsAnother"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionAutoTests.cs",
+                             "adr":  "docs/adr/0010-sequential-auto-admission.md"
+                         },
+                         {
+                             "id":  "M3C-007",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionAutoTests",
+                             "method":  "CancelCurrentRun_StopsAutoOnlyAfterActualCompletion",
+                             "cases":  [
+                                           "CancelCurrentRun_StopsAutoOnlyAfterActualCompletion"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionAutoTests.cs",
+                             "adr":  "docs/adr/0010-sequential-auto-admission.md"
+                         },
+                         {
+                             "id":  "M3C-008",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionAutoTests",
+                             "method":  "LateCancelDuringPersistence_DoesNotStopAuto",
+                             "cases":  [
+                                           "LateCancelDuringPersistence_DoesNotStopAuto"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionAutoTests.cs",
+                             "adr":  "docs/adr/0010-sequential-auto-admission.md"
+                         },
+                         {
+                             "id":  "M3C-009",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionAutoTests",
+                             "method":  "EachRunGetsFreshTimeout_AndOldTimerCannotCancelNextRun",
+                             "cases":  [
+                                           "EachRunGetsFreshTimeout_AndOldTimerCannotCancelNextRun"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionAutoTests.cs",
+                             "adr":  "docs/adr/0010-sequential-auto-admission.md"
+                         },
+                         {
+                             "id":  "M3C-010",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionAutoTests",
+                             "method":  "ExecutionFailure_StopsAutoAndAllowsExplicitRestart",
+                             "cases":  [
+                                           "ExecutionFailure_StopsAutoAndAllowsExplicitRestart (Prepare)",
+                                           "ExecutionFailure_StopsAutoAndAllowsExplicitRestart (Acquire)",
+                                           "ExecutionFailure_StopsAutoAndAllowsExplicitRestart (Inspect)",
+                                           "ExecutionFailure_StopsAutoAndAllowsExplicitRestart (Persist)"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionAutoTests.cs",
+                             "adr":  "docs/adr/0010-sequential-auto-admission.md"
+                         },
+                         {
+                             "id":  "M3C-011",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionAutoTests",
+                             "method":  "TerminationFailure_StopsAutoAndPermanentlyRejectsAdmission",
+                             "cases":  [
+                                           "TerminationFailure_StopsAutoAndPermanentlyRejectsAdmission (True)",
+                                           "TerminationFailure_StopsAutoAndPermanentlyRejectsAdmission (False)"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionAutoTests.cs",
+                             "adr":  "docs/adr/0010-sequential-auto-admission.md"
+                         },
+                         {
+                             "id":  "M3C-012",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionAutoTests",
+                             "method":  "InvalidOptions_DoNotReserveAdmission",
+                             "cases":  [
+                                           "InvalidOptions_DoNotReserveAdmission (0)",
+                                           "InvalidOptions_DoNotReserveAdmission (1)",
+                                           "InvalidOptions_DoNotReserveAdmission (2)",
+                                           "InvalidOptions_DoNotReserveAdmission (3)",
+                                           "InvalidOptions_DoNotReserveAdmission (4)",
+                                           "InvalidOptions_DoNotReserveAdmission (5)"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionAutoTests.cs",
+                             "adr":  "docs/adr/0010-sequential-auto-admission.md"
+                         },
+                         {
+                             "id":  "M3C-013",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionAutoTests",
+                             "method":  "TimerCreationFailure_ReleasesReservation",
+                             "cases":  [
+                                           "TimerCreationFailure_ReleasesReservation (True)",
+                                           "TimerCreationFailure_ReleasesReservation (False)"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionAutoTests.cs",
+                             "adr":  "docs/adr/0010-sequential-auto-admission.md"
+                         },
+                         {
+                             "id":  "M3C-014",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionAutoTests",
+                             "method":  "NextRunSetupFailure_DoesNotLeaveAnActiveRun",
+                             "cases":  [
+                                           "NextRunSetupFailure_DoesNotLeaveAnActiveRun"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionAutoTests.cs",
+                             "adr":  "docs/adr/0010-sequential-auto-admission.md"
+                         },
+                         {
+                             "id":  "M3C-015",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionAutoTests",
+                             "method":  "DisposeDuringAuto_DrainsCurrentRunAndStopsScheduling",
+                             "cases":  [
+                                           "DisposeDuringAuto_DrainsCurrentRunAndStopsScheduling (Inspect,Canceled)",
+                                           "DisposeDuringAuto_DrainsCurrentRunAndStopsScheduling (Persist,Succeeded)"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionAutoTests.cs",
+                             "adr":  "docs/adr/0010-sequential-auto-admission.md"
+                         },
+                         {
+                             "id":  "M3C-016",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionAutoTests",
+                             "method":  "DisposeWhileWaiting_ClosesScheduleAndIgnoresLateTimer",
+                             "cases":  [
+                                           "DisposeWhileWaiting_ClosesScheduleAndIgnoresLateTimer"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionAutoTests.cs",
+                             "adr":  "docs/adr/0010-sequential-auto-admission.md"
+                         },
+                         {
+                             "id":  "M3C-017",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.NativeAutoTests",
+                             "method":  "AutoStopAndCancel_DrainRealNativeCallbackBeforeReleasingReservation",
+                             "cases":  [
+                                           "AutoStopAndCancel_DrainRealNativeCallbackBeforeReleasingReservation (False)",
+                                           "AutoStopAndCancel_DrainRealNativeCallbackBeforeReleasingReservation (True)"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/NativeAutoTests.cs",
+                             "adr":  "docs/adr/0010-sequential-auto-admission.md"
+                         },
+                         {
+                             "id":  "M3C-018",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.InspectionAutoTests",
+                             "method":  "StopAuto_DoesNotHideCurrentStorageFailure",
+                             "cases":  [
+                                           "StopAuto_DoesNotHideCurrentStorageFailure"
+                                       ],
+                             "source":  "tests/Inspection.Tests/InspectionAutoTests.cs",
+                             "adr":  "docs/adr/0010-sequential-auto-admission.md"
                          }
                      ]
 }

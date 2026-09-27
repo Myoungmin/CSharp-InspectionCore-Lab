@@ -1,6 +1,6 @@
 namespace Inspection.Core;
 
-public sealed class InspectionEngine : IAsyncDisposable
+public sealed partial class InspectionEngine : IAsyncDisposable
 {
     private readonly object _gate = new();
     private readonly InspectionRunner _runner;
@@ -20,50 +20,65 @@ public sealed class InspectionEngine : IAsyncDisposable
     public InspectionStartResult Start(InspectionJob job, TimeSpan? timeout = null)
     {
         ArgumentNullException.ThrowIfNull(job);
+        ValidateTimeout(timeout);
+        lock (_gate)
+        {
+            if (_state != InspectionEngineState.Ready) { return new(InspectionStartDisposition.Unavailable, null, null); }
+            if (_active is not null || _auto is not null) { return new(InspectionStartDisposition.Busy, null, _active?.RunId, _auto?.AutoId); }
+            return new(InspectionStartDisposition.Accepted, StartRunLocked(job, timeout).Handle, null);
+        }
+    }
+
+    private static void ValidateTimeout(TimeSpan? timeout)
+    {
         if (timeout is { } duration && duration != Timeout.InfiniteTimeSpan &&
             (duration < TimeSpan.Zero || duration.TotalMilliseconds > uint.MaxValue - 1d))
         {
             throw new ArgumentOutOfRangeException(nameof(timeout));
         }
+    }
 
-        lock (_gate)
+    private ActiveRun StartRunLocked(InspectionJob job, TimeSpan? timeout)
+    {
+        var run = new ActiveRun(job, _timeProvider.GetUtcNow());
+        _active = run;
+        try
         {
-            if (_state != InspectionEngineState.Ready) { return new(InspectionStartDisposition.Unavailable, null, null); }
-            if (_active is not null) { return new(InspectionStartDisposition.Busy, null, _active.RunId); }
-
-            var run = new ActiveRun(job, _timeProvider.GetUtcNow());
-            _active = run;
-            try
+            if (timeout == TimeSpan.Zero)
             {
-                if (timeout == TimeSpan.Zero)
-                {
-                    RequestStopLocked(run, InspectionStopReason.Timeout);
-                }
-                else if (timeout is { } dueTime && dueTime != Timeout.InfiniteTimeSpan)
-                {
-                    run.Timer = _timeProvider.CreateTimer(_ =>
-                    {
-                        lock (_gate) { RequestStopLocked(run, InspectionStopReason.Timeout); }
-                    }, null, dueTime, Timeout.InfiniteTimeSpan);
-                }
-
-                // The slot is already reserved. Even a synchronous inspector cannot block admission.
-                _ = Task.Run(() => ExecuteAsync(run));
-                return new(InspectionStartDisposition.Accepted, run.Handle, null);
+                RequestStopLocked(run, InspectionStopReason.Timeout);
             }
-            catch
+            else if (timeout is { } dueTime && dueTime != Timeout.InfiniteTimeSpan)
             {
-                _active = null;
-                run.Timer?.Dispose();
-                run.Cancellation.Dispose();
-                throw;
+                run.Timer = _timeProvider.CreateTimer(_ =>
+                {
+                    lock (_gate) { RequestStopLocked(run, InspectionStopReason.Timeout); }
+                }, null, dueTime, Timeout.InfiniteTimeSpan);
             }
+
+            // The slot is already reserved. Even a synchronous inspector cannot block admission.
+            _ = Task.Run(() => ExecuteAsync(run));
+            return run;
+        }
+        catch
+        {
+            _active = null;
+            run.Timer?.Dispose();
+            run.Cancellation.Dispose();
+            throw;
         }
     }
 
     public InspectionEngineSnapshot GetStatus()
     {
-        lock (_gate) { return new(_state, _active is not null, _active?.Snapshot() ?? _last, _error); }
+        lock (_gate)
+        {
+            return new(_state, _active is not null, _active?.Snapshot() ?? _last, _error)
+            {
+                Mode = _auto is null ? InspectionExecutionMode.Manual : InspectionExecutionMode.Automatic,
+                Auto = _auto?.Snapshot() ?? _lastAuto
+            };
+        }
     }
 
     public InspectionRunSnapshot? GetRun(Guid runId)
@@ -90,8 +105,10 @@ public sealed class InspectionEngine : IAsyncDisposable
         {
             if (_disposeTask is not null) { return new(_disposeTask); }
             if (_state != InspectionEngineState.Faulted) { _state = InspectionEngineState.Stopping; }
+            if (_auto is not null) { StopAutoLocked(_auto, InspectionAutoStopReason.Shutdown); }
             if (_active is not null) { RequestStopLocked(_active, InspectionStopReason.Shutdown); }
-            _disposeTask = FinishDisposalAsync(_active?.Completion.Task ?? Task.CompletedTask);
+            _disposeTask = FinishDisposalAsync(Task.WhenAll(
+                _active?.Completion.Task ?? Task.CompletedTask, _auto?.Completion.Task ?? Task.CompletedTask));
             return new(_disposeTask);
         }
     }

@@ -23,10 +23,14 @@ public sealed record InspectionRunSnapshot(
 }
 
 public sealed record InspectionEngineSnapshot(
-    InspectionEngineState State, bool IsBusy, InspectionRunSnapshot? Run, Exception? Error);
+    InspectionEngineState State, bool IsBusy, InspectionRunSnapshot? Run, Exception? Error)
+{
+    public InspectionExecutionMode Mode { get; init; }
+    public InspectionAutoSnapshot? Auto { get; init; }
+}
 
 public sealed record InspectionStartResult(
-    InspectionStartDisposition Disposition, InspectionRunHandle? Run, Guid? BusyRunId);
+    InspectionStartDisposition Disposition, InspectionRunHandle? Run, Guid? BusyRunId, Guid? BusyAutoId = null);
 
 public sealed class InspectionRunHandle
 {

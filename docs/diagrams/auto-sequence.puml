@@ -1,0 +1,56 @@
+@startuml auto-sequence
+title M3c sequential auto reservation, StopAuto and CancelRun
+actor Caller
+participant InspectionEngine as Engine
+participant "Auto session" as Auto
+participant "Same run path / Runner" as Run
+participant TimeProvider as Clock
+Caller -> Engine : StartAuto(job, interval, timeout, maxRuns)
+Engine -> Engine : reserve AutoId and first RunId under shared lock
+Engine -> Auto : start loop with first run handle
+Engine --> Caller : Accepted / auto.Completion
+loop until a terminal outcome is chosen
+par current inspection
+Engine ->> Run : Prepare -> Acquire -> Inspect -> Persist
+Run --> Auto : run.Completion (including cleanup)
+else optional caller requests while run is active
+opt stop future runs
+Caller -> Engine : StopAuto(autoId)
+Engine -> Auto : prohibit next admission / leave current run intact
+Engine --> Caller : Accepted
+end
+opt also cancel current work
+Caller -> Engine : CancelRun(currentRunId)
+Engine -> Run : request stop (Persisting returns TooLate)
+end
+end
+Auto -> Auto : count completion / retain last run only
+alt Succeeded, no stop, below run limit
+Auto -> Clock : Task.Delay(interval, provider, schedule token)
+note over Engine, Clock
+Mode=Automatic, IsBusy=false while waiting.
+Manual Start / another StartAuto still returns Busy with BusyAutoId.
+end note
+opt StopAuto while waiting
+Caller -> Engine : StopAuto(autoId)
+Engine -> Auto : prohibit next admission / cancel schedule delay only
+Engine --> Caller : Accepted
+end
+Clock --> Auto : delay completed or canceled
+opt delay succeeded and no stop won the admission lock
+Auto -> Engine : admit next RunId under shared lock
+end
+else stop requested, run limit reached or run failed
+Auto -> Auto : finish repetition / preserve last run diagnostics
+end
+end
+Auto -> Auto : finish schedule cancellation delivery / dispose schedule token
+Auto -> Engine : release auto reservation / save final snapshot
+Engine --> Caller : auto.Completion
+note over Caller, Engine
+StopAuto and next admission share the engine lock.
+If admission wins, StopAuto leaves that run intact.
+Engine disposal stops scheduling AND requests current Shutdown,
+then waits for both run and session cleanup.
+end note
+@enduml

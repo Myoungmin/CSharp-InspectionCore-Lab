@@ -9,7 +9,8 @@
 | [DEV01 — 지속 개발 구조](DEV01-development-workflow.md) | Verified | 필수 42개 사례와 전체 검증 통과, M2와 함께 7e4f269 커밋 |
 | [M3a — 단일 실행 제어](M03a-single-run-engine.md) | Verified | [M3a 실습](../docs/practice-M03a.md), 총 67개 필수 사례와 전체 검증 통과 |
 | [M3b — Native 비동기 종료](M03b-native-lifetime.md) | Verified | [M3b 실습](../docs/practice-M03b.md), 총 87개 필수 사례와 전체 검증 통과 |
-| M3c — 순차 자동 반복 | Planned | StopAuto와 CancelRun 분리, 수동·자동 배타 실행, 종료 원인에 따른 반복 중지 |
+| [M3c — 순차 자동 반복](M03c-auto-sequence.md) | Verified | [M3c 실습](../docs/practice-M03c.md), 총 120개 필수 사례·자동 반복 JSON·전체 검증 통과 |
+| M4 — Named Pipe IPC | Planned | 별도 Client, 요청·응답·재접속·RequestId 중복 방지 |
 
 ## 공통 완료 기준
 

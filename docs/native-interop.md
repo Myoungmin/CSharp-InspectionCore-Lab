@@ -47,7 +47,7 @@ NativeFaultMode의 Create/Inspect/Stop/Wait 실패는 가상 DLL의 실제 예�
 
 Native는 VS MSBuild, v143/14.44.35207, Windows SDK 10.0.26100.0과 정적 CRT를 사용한다. 관리 프로젝트는 .NET SDK 9.0.305/net9.0/x64로 빌드한다. 전체 검증은 Native 빌드 후 dotnet build/test 순서다.
 
-실제 DLL 테스트 32개는 기존 20개와 비동기 수명 12개다. Core 종료 실패 8개는 실제 Native 없이 엔진의 원인·상태 우선순위를 확인한다. Native/파일 통합 테스트에는 프로세스 종료 제한을 두고 필수 누락·skip은 실패한다. [검증 대응표](verification-map.md)에 사례를 고정한다.
+실제 DLL 테스트 34개는 기존 20개, 비동기 수명 12개와 M3c 자동 예약 중지·현재 실행 취소 2개다. Core 종료 실패 8개는 실제 Native 없이 엔진의 원인·상태 우선순위를 확인한다. Native/파일 통합 테스트에는 프로세스 종료 제한을 두고 필수 누락·skip은 실패한다. [검증 대응표](verification-map.md)에 사례를 고정한다.
 
 ## 공식 참고
 

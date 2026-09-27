@@ -19,6 +19,8 @@ class InspectionRunner {
 }
 class InspectionEngine {
   Start(job, timeout)
+  StartAuto(job, interval, timeout, maxRuns)
+  GetAuto(autoId) / StopAuto(autoId)
   GetStatus() / GetRun(runId)
   CancelRun(runId)
   DisposeAsync()
@@ -26,6 +28,14 @@ class InspectionEngine {
 class InspectionRunHandle {
   RunId / JobId
   Completion
+}
+class InspectionAutoHandle {
+  AutoId / Completion
+}
+class InspectionAutoSnapshot {
+  AutoId / State / StopReason
+  CurrentRunId / LastRun
+  StartedRuns / CompletedRuns / NextRunAtUtc
 }
 class InspectionRunSnapshot {
   State / Stage / StopReason
@@ -48,6 +58,9 @@ interface IResultStore {
 InspectionRunner --> IDevice : borrows
 InspectionEngine --> InspectionRunner : borrows / one active run
 InspectionEngine ..> InspectionRunHandle : admission
+InspectionEngine ..> InspectionAutoHandle : reserves running and waiting session
+InspectionAutoHandle ..> InspectionAutoSnapshot : session completion
+InspectionAutoSnapshot --> InspectionRunSnapshot : last completed run only
 InspectionEngine ..> InspectionRunSnapshot : immutable snapshot
 InspectionEngine ..> InspectionTerminationException : Faulted / reject new runs
 InspectionRunHandle ..> InspectionRunSnapshot : completion result

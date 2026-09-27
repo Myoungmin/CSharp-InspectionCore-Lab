@@ -1,12 +1,12 @@
-# M3b Engine 계약
+# M3c Engine 계약
 
-InspectionEngine은 단일 실행 접수·상태·취소·시간 제한을 관리한다. Inspector와 장비는 Core 포트로 빌려 쓰며 Host가 소유한다. 결정의 배경은 [ADR-0006](adr/0006-single-run-engine.md)과 [ADR-0009](adr/0009-termination-failure-quarantine.md)에 있다. 0009는 M3a의 0007을 확장·대체한다.
+InspectionEngine은 단일 실행 접수·상태·취소·시간 제한과 순차 자동 반복을 관리한다. [자동 실행 계약](auto-contract.md)에 StartAuto/GetAuto/StopAuto와 반복 중지 정책을 설명한다. Inspector와 장비는 Core 포트로 빌려 쓰며 Host가 소유한다. 결정의 배경은 [ADR-0010](adr/0010-sequential-auto-admission.md)과 [ADR-0009](adr/0009-termination-failure-quarantine.md)에 있다. 0009는 M3a의 0007을 확장·대체한다.
 
 ## 접수와 조회
 
-`Start(job, timeout)`은 Accepted, Busy, Unavailable 중 하나를 반환한다. Accepted만 새 RunId와 `InspectionRunHandle.Completion`을 가진다. Busy는 이미 실행 자리가 사용 중인 경우이며 해당 BusyRunId를 반환한다. 종료 중·해제 후·엔진 장애는 Unavailable이다. 잘못된 Job·시간 제한은 접수 전에 예외로 거절한다. 실행 큐는 없다.
+`Start(job, timeout)`은 Accepted, Busy, Unavailable 중 하나를 반환한다. Accepted만 새 RunId와 `InspectionRunHandle.Completion`을 가진다. Busy는 실제 실행 또는 자동 세션이 예약한 경우다. 실행 중에는 BusyRunId를 반환하고 자동 예약에는 BusyAutoId도 반환한다. 자동 대기에는 BusyRunId가 null일 수 있다. 종료 중·해제 후·엔진 장애는 Unavailable이다. 잘못된 Job·시간 제한은 접수 전에 예외로 거절한다. 실행 큐는 없다.
 
-`GetStatus()`는 엔진 수명 상태와 IsBusy, 현재 또는 마지막 실행을 반환한다. Ready는 접수 기능이 열려 있다는 뜻이며 실행 중에도 Ready/IsBusy=true일 수 있다. `GetRun(runId)`는 현재 실행과 직전 완료 실행만 조회한다. 그보다 오래된 결과는 접수 때 받은 Completion에 남으며 전체 이력 검색은 제공하지 않는다.
+`GetStatus()`는 엔진 수명 상태와 IsBusy, 현재 또는 마지막 실행을 반환한다. Ready는 접수 기능이 열려 있다는 뜻이며 실행 중에도 Ready/IsBusy=true일 수 있다. Mode는 Manual/Automatic으로 자동 예약 여부를 구분한다. 자동 대기는 IsBusy=false여도 새 접수를 거절한다. `GetRun(runId)`는 현재 실행과 직전 완료 실행만 조회한다. 그보다 오래된 결과는 접수 때 받은 Completion에 남으며 전체 이력 검색은 제공하지 않는다.
 
 스냅샷은 이후 상태 갱신의 영향을 받지 않는다. State와 Stage는 구분한다. State는 실행 상태, Stage는 Runner가 진입을 시도하는 Prepare/Acquire/Inspect/Persist 단계다. 최초 접수 직후 아직 Runner가 시작되지 않았다면 Stage는 null이다. AcceptedAtUtc, 실제 Runner 시작·검사 완료 시각, CompletedAtUtc도 서로 다른 시점이다.
 
@@ -59,4 +59,4 @@ if (start.Run is { } run)
 }
 ```
 
-Completion은 실행의 실패·취소도 스냅샷으로 반환한다. 기존 Runner.RunAsync 직접 호출은 예외 기반 계약을 유지한다. Host는 CLI 한 건 실행이며 다른 프로세스의 상태 조회·취소 명령은 M4에서 연결한다.
+Completion은 실행의 실패·취소도 스냅샷으로 반환한다. 기존 Runner.RunAsync 직접 호출은 예외 기반 계약을 유지한다. Host는 CLI 한 건 또는 유한 자동 반복을 제공한다. 다른 프로세스의 상태 조회·취소 명령은 M4에서 연결한다.

@@ -1,7 +1,8 @@
 # ADR-0006: Engine이 실행 자리 하나와 접수·조회 API를 관리한다
 
 - Date: 2026-09-27
-- Status: Accepted
+- Status: Superseded
+- Superseded by: [ADR-0010](0010-sequential-auto-admission.md). 아래는 M3a 당시 접수 결정이며 M3c에서 자동 대기 예약으로 확장한다.
 
 ## Context
 

@@ -11,7 +11,7 @@ $powershell = Join-Path $PSHOME 'powershell.exe'
 $verificationId = [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssZ') + '-' + [Guid]::NewGuid().ToString('N').Substring(0, 8)
 $outputDir = Join-Path $repoRoot "artifacts/verification/$verificationId"
 New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
-$summary = [ordered]@{ milestone = 'M3b'; verificationId = $verificationId; status = 'Failed'; baselineCommit = $null; sourceHash = $null; nativeDllHash = $null; testsPassed = 0; integrationTestsPassed = 0; nativeTestsPassed = 0; smokeCases = @(); steps = @(); error = $null }
+$summary = [ordered]@{ milestone = 'M3c'; verificationId = $verificationId; status = 'Failed'; baselineCommit = $null; sourceHash = $null; nativeDllHash = $null; testsPassed = 0; integrationTestsPassed = 0; nativeTestsPassed = 0; smokeCases = @(); steps = @(); error = $null }
 
 function Get-SourceSnapshot {
     $paths = @(& git -C $repoRoot -c core.quotepath=false ls-files --cached --others --exclude-standard | Sort-Object -Unique)
@@ -65,9 +65,9 @@ try {
     [xml]$trx = [IO.File]::ReadAllText($trxPath)
     $counters = $trx.TestRun.ResultSummary.Counters
     $testResults = @($trx.TestRun.Results.UnitTestResult)
-    if ([int]$counters.total -lt 52 -or [int]$counters.executed -ne [int]$counters.total -or
+    if ([int]$counters.total -lt 83 -or [int]$counters.executed -ne [int]$counters.total -or
         [int]$counters.passed -ne [int]$counters.total -or @($testResults | Where-Object { $_.outcome -ne 'Passed' }).Count -gt 0) {
-        throw 'M3b requires at least 52 executed, passing Core tests (44 existing + 8 termination failure cases), with no skipped or failed results.'
+        throw 'M3c requires at least 83 executed, passing Core tests (52 existing + 31 auto cases), with no skipped or failed results.'
     }
     $summary.testsPassed = [int]$counters.passed
 
@@ -78,14 +78,14 @@ try {
     [xml]$integrationTrx = [IO.File]::ReadAllText($integrationTrxPath)
     $integrationCounters = $integrationTrx.TestRun.ResultSummary.Counters
     $integrationResults = @($integrationTrx.TestRun.Results.UnitTestResult)
-    if ([int]$integrationCounters.total -lt 35 -or [int]$integrationCounters.executed -ne [int]$integrationCounters.total -or
+    if ([int]$integrationCounters.total -lt 37 -or [int]$integrationCounters.executed -ne [int]$integrationCounters.total -or
         [int]$integrationCounters.passed -ne [int]$integrationCounters.total -or $integrationResults.Count -ne [int]$integrationCounters.total -or
         @($integrationResults | Where-Object { $_.outcome -ne 'Passed' }).Count -gt 0) {
-        throw 'M3b requires at least 35 integration tests, all executed and passing; skip is not permitted.'
+        throw 'M3c requires at least 37 integration tests, all executed and passing; skip is not permitted.'
     }
-    $nativeTestIds = @($integrationTrx.TestRun.TestDefinitions.UnitTest | Where-Object { $_.TestMethod.className -in @('Inspection.IntegrationTests.NativeInspectorTests', 'Inspection.IntegrationTests.NativeLifetimeTests') } | ForEach-Object { $_.id })
+    $nativeTestIds = @($integrationTrx.TestRun.TestDefinitions.UnitTest | Where-Object { $_.TestMethod.className -in @('Inspection.IntegrationTests.NativeInspectorTests', 'Inspection.IntegrationTests.NativeLifetimeTests', 'Inspection.IntegrationTests.NativeAutoTests') } | ForEach-Object { $_.id })
     $nativeResults = @($integrationResults | Where-Object { $_.testId -in $nativeTestIds })
-    if ($nativeResults.Count -lt 32) { throw 'The 32 mandatory actual-DLL test cases were not executed.' }
+    if ($nativeResults.Count -lt 34) { throw 'The 34 mandatory actual-DLL test cases were not executed.' }
     $summary.integrationTestsPassed = [int]$integrationCounters.passed
     $summary.nativeTestsPassed = $nativeResults.Count
     $null = Invoke-Step 'required-test-cases' $powershell @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $PSScriptRoot 'check-required-tests.ps1'), '-CoreTrx', $trxPath, '-IntegrationTrx', $integrationTrxPath)
@@ -132,6 +132,39 @@ try {
     }
 
     $blockedPath = Join-Path $outputDir 'not-a-directory'
+    $seenAutoIds = @()
+    foreach ($inspector in @('managed', 'native')) {
+      foreach ($scenario in @('pass', 'fail')) {
+        $autoDir = Join-Path $outputDir "auto $inspector $scenario"
+        $autoResult = Invoke-Step "host-auto-$inspector-$scenario" $dotnet @($hostDll, '--inspector', $inspector, '--scenario', $scenario, '--repeat', '3', '--interval-ms', '0', '--output', $autoDir) -TimeoutSeconds 30
+        $autoMatch = [regex]::Match($autoResult.Stdout, 'AutoId=([0-9a-fA-F-]{36}) State=Completed Reason=RunLimitReached StartedRuns=3 CompletedRuns=3')
+        if (-not $autoMatch.Success) { throw 'Auto Host must complete all three sequential runs, including product Fail.' }
+        $autoId = [Guid]::Parse($autoMatch.Groups[1].Value)
+        if ($autoId -eq [Guid]::Empty -or $autoId -in $seenAutoIds) { throw 'AutoId must be nonempty and unique.' }
+        $seenAutoIds += $autoId
+        $files = @(Get-ChildItem -LiteralPath $autoDir -Filter '*.json')
+        if ($files.Count -ne 3 -or @(Get-ChildItem -LiteralPath $autoDir -Filter '*.tmp').Count -ne 0) { throw 'Auto must publish exactly three finished result files.' }
+        $autoRunIds = @()
+        foreach ($file in $files) {
+            $data = [IO.File]::ReadAllText($file.FullName) | ConvertFrom-Json
+            $runId = [Guid]::Parse($data.RunId)
+            $expectedVerdict = if ($scenario -eq 'pass') { 'Pass' } else { 'Fail' }
+            $expectedScore = if ($scenario -eq 'pass') { 100 } else { 75 }
+            $expectedDefects = if ($scenario -eq 'pass') { 0 } else { 1 }
+            if ($runId -eq [Guid]::Empty -or $runId -in $seenIds -or $file.BaseName -cne $runId.ToString('N') -or
+                $data.JobId -cne "demo-$scenario" -or $data.Assessment.Verdict -cne $expectedVerdict -or
+                $data.Assessment.Score -ne $expectedScore -or $data.Assessment.DefectCount -ne $expectedDefects -or $data.Assessment.SampleCount -ne 4) {
+                throw 'Auto result must retain JobId, have a new RunId and match the selected scenario.'
+            }
+            $seenIds += $runId
+            $autoRunIds += $runId.ToString()
+        }
+        $lastRun = [regex]::Match($autoResult.Stdout, 'RunId=([0-9a-fA-F-]{36}) JobId=demo-\w+ Status=Succeeded')
+        if (-not $lastRun.Success -or $lastRun.Groups[1].Value -notin $autoRunIds) { throw 'Auto Host must report its last persisted run.' }
+        if ($inspector -eq 'native' -and @([regex]::Matches($autoResult.Stdout, '(?m)^NativeProgress=4/4\r?$')).Count -ne 3) { throw 'Each native auto run must finish its progress callbacks.' }
+        $summary.smokeCases += [ordered]@{ inspector = $inspector; scenario = $scenario; autoId = $autoId.ToString(); runIds = $autoRunIds; count = 3 }
+      }
+    }
     [IO.File]::WriteAllText($blockedPath, 'storage failure fixture')
     $storageFailure = Invoke-Step 'host-storage-failure' $dotnet @($hostDll, '--output', $blockedPath) -ExpectedExitCode 1 -TimeoutSeconds 30
     if ($storageFailure.Stderr -notmatch 'RunId=[0-9a-fA-F-]{36} Status=Faulted Stage=Persist ComputedScore=100\.00' -or $storageFailure.Stdout -match 'Succeeded') {
@@ -140,12 +173,19 @@ try {
     $null = Invoke-Step 'host-invalid-arguments' $dotnet @($hostDll, '--scenario', 'unknown') -ExpectedExitCode 2 -TimeoutSeconds 30
     $null = Invoke-Step 'host-invalid-inspector' $dotnet @($hostDll, '--inspector', 'unknown') -ExpectedExitCode 2 -TimeoutSeconds 30
     $null = Invoke-Step 'host-invalid-timeout' $dotnet @($hostDll, '--timeout-ms', '-2') -ExpectedExitCode 2 -TimeoutSeconds 30
+    $null = Invoke-Step 'host-invalid-repeat' $dotnet @($hostDll, '--repeat', '0') -ExpectedExitCode 2 -TimeoutSeconds 30
+    $null = Invoke-Step 'host-invalid-interval' $dotnet @($hostDll, '--repeat', '2', '--interval-ms', '-1') -ExpectedExitCode 2 -TimeoutSeconds 30
+    $null = Invoke-Step 'host-interval-without-repeat' $dotnet @($hostDll, '--interval-ms', '10') -ExpectedExitCode 2 -TimeoutSeconds 30
+    $autoStorageFailure = Invoke-Step 'host-auto-storage-failure' $dotnet @($hostDll, '--repeat', '3', '--interval-ms', '0', '--output', $blockedPath) -ExpectedExitCode 1 -TimeoutSeconds 30
+    if ($autoStorageFailure.Stdout -notmatch 'State=Faulted Reason=RunFaulted StartedRuns=1 CompletedRuns=1' -or $autoStorageFailure.Stderr -notmatch 'Stage=Persist ComputedScore=100\.00') { throw 'Storage failure must stop auto after one run.' }
     foreach ($inspector in @('managed', 'native')) {
         $timeoutDir = Join-Path $outputDir "timeout-$inspector"
         $timedOut = Invoke-Step "host-timeout-$inspector" $dotnet @($hostDll, '--inspector', $inspector, '--timeout-ms', '0', '--output', $timeoutDir) -ExpectedExitCode 124 -TimeoutSeconds 30
         if ($timedOut.Stderr -notmatch 'RunId=[0-9a-fA-F-]{36} Status=TimedOut Stage=Prepare Reason=Timeout' -or $timedOut.Stdout -match 'Succeeded' -or (Test-Path -LiteralPath $timeoutDir)) {
             throw 'An immediate timeout must finish as TimedOut without acquiring or persisting a result.'
         }
+        $autoTimeout = Invoke-Step "host-auto-timeout-$inspector" $dotnet @($hostDll, '--inspector', $inspector, '--repeat', '3', '--interval-ms', '0', '--timeout-ms', '0', '--output', $timeoutDir) -ExpectedExitCode 124 -TimeoutSeconds 30
+        if ($autoTimeout.Stdout -notmatch 'State=Stopped Reason=RunTimedOut StartedRuns=1 CompletedRuns=1' -or $autoTimeout.Stderr -notmatch 'Status=TimedOut' -or (Test-Path -LiteralPath $timeoutDir)) { throw 'Timeout must stop auto without persisting a result.' }
     }
     $missingDllDir = Join-Path $outputDir 'missing native dll'
     New-Item -ItemType Directory -Path $missingDllDir | Out-Null

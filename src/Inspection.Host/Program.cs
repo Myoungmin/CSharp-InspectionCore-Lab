@@ -3,6 +3,8 @@ using Inspection.Core;
 using Inspection.Infrastructure;
 using Inspection.Interop;
 
+if (args.FirstOrDefault() == "--serve") { return await Inspection.Host.ServerProgram.RunAsync(args[1..]); }
+
 string scenario = "pass";
 string inspectorKind = "managed";
 string outputDirectory = Path.Combine("artifacts", "results");
@@ -15,6 +17,7 @@ for (int i = 0; i < args.Length; i++)
     if (args[i] == "--help")
     {
         Console.WriteLine("Inspection.Host [--scenario pass|fail] [--inspector managed|native] [--output DIRECTORY] [--timeout-ms 0..4294967294] [--repeat 1..2147483647 [--interval-ms 0..4294967294]]");
+        Console.WriteLine("Inspection.Host --serve [--pipe NAME] [--inspector managed|native] [--output DIRECTORY] [--device-delay-ms 0..60000]");
         return 0;
     }
 

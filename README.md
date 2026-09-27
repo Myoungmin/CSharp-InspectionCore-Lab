@@ -1,6 +1,6 @@
 # CSharp InspectionCore Lab
 
-가상 검사 장비로 C# Non-UI Core를 실습하는 프로젝트다. 현재 구현 범위는 **M3c: 수동·자동 배타 실행, 순차 반복·예약 중지·현재 실행 취소와 C#/C++ 검사 → JSON 저장**이다.
+가상 검사 장비로 C# Non-UI Core를 실습하는 프로젝트다. 현재 구현 범위는 **M4: 별도 Client와 Named Pipe를 통한 접수·조회·취소·재접속, 수동·자동 실행과 C#/C++ 검사 → JSON 저장**이다.
 
 ## 실행
 
@@ -28,6 +28,18 @@ dotnet run --project src/Inspection.Host --configuration Release --no-restore --
 
 시간 제한을 생략하면 무제한이다. Ctrl+C는 자동 예약이 있으면 먼저 중지하고 현재 실행의 취소를 요청한다. --repeat은 유한 반복, --interval-ms는 저장·정리 완료 후 대기 간격이며 기본값은 1000ms다. 취소·시간 초과 뒤에도 실제 작업이 끝날 때까지 기다리며, 이미 Persisting이면 저장 결과를 유지한다. Core의 Start/GetStatus/GetRun/CancelRun 사용법과 보장 범위는 [Engine 계약](docs/engine-contract.md)에 있다.
 
+## 프로세스 간 제어
+
+별도 프로세스 제어는 서버를 먼저 실행하고 [IPC 계약의 요청 예시](docs/ipc-contract.md)로 Client를 실행한다.
+
+```powershell
+dotnet run --project src/Inspection.Host -c Release -- --serve --pipe InspectionLab --inspector native
+# In another terminal, after creating artifacts/start.json:
+dotnet run --project src/Inspection.Client -c Release -- --pipe InspectionLab --request artifacts/start.json
+```
+
+서버는 `exit` 또는 Ctrl+C로 종료한다. 같은 시작 RequestId는 Host가 살아 있는 동안 처음의 접수 응답을 반환한다. Client 단절은 실행을 취소하지 않는다. 원래 요청을 재전송하거나 RunId로 조회·취소한다.
+
 ## 전체 검증
 
 ```powershell
@@ -41,7 +53,7 @@ $env:PLANTUML_JAR = 'C:\tools\plantuml.jar'
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify.ps1
 ```
 
-검증 스크립트는 Native 빌드 → 관리 프로젝트의 잠금 파일 restore·Release 빌드 → Core 단위 테스트 → Native·파일 통합 테스트 → 두 검사기의 실제 콘솔·JSON → 의존성·문서를 검사한다. 현재 필수 테스트는 Core 83개(기존 52 + 자동 실행 31)와 통합 37개(실제 DLL 34 + 파일 3), 총 120개다. 전체 수와 함께 필수 클래스·메서드·데이터 사례의 실행 여부를 확인한다. DLL 배포 해시, DLL 누락 시 실패, 저장 실패, 잘못된 인수, 두 검사기의 즉시 시간 초과도 확인한다. 두 검사기의 자동 Pass/Fail 각 3회, 자동 저장 실패·타임아웃·인수 오류도 확인한다. ADR 10건·다이어그램 8개·상대 링크를 검사한다. 테스트 누락·skip, 결과 파일 누락, 검증 중 소스 변경은 실패다. 상세 결과는 `artifacts/verification/<id>/summary.json`, TRX와 로그에 남는다.
+검증 스크립트는 Native 빌드 → 관리 프로젝트의 잠금 파일 restore·Release 빌드 → Core 단위 테스트 → Native·파일·IPC 통합 테스트 → 두 검사기의 기존 CLI·JSON → 의존성·문서를 검사한다. 필수 테스트는 Core 83개와 통합 63개(실제 DLL 34 + 파일 6 + IPC 23), 총 146개다. IPC 중 21개는 실제 Host 프로세스이며 그중 4개는 별도 Client 실행 파일도 사용한다. 전체 수와 함께 필수 클래스·메서드·데이터 사례를 확인한다. DLL 해시·누락·저장 실패·인수·타임아웃·자동 반복 검증도 유지한다. ADR 12건·다이어그램 9개·상대 링크를 검사한다. 누락·skip·결과 파일 누락·검증 중 소스 변경은 실패다. 상세 결과는 `artifacts/verification/<id>/summary.json`, TRX와 로그에 남고 IPC 프로세스 로그는 `artifacts/ipc-tests`에 남는다.
 
 ## 구조와 다음 단계
 
@@ -63,10 +75,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify.ps1
 - [자동 실행 계약](docs/auto-contract.md)
 - [M3c 작업·인수 조건](tasks/M03c-auto-sequence.md)
 - [M3c 실습 기록](docs/practice-M03c.md)
+- [IPC 사용법과 프로토콜 계약](docs/ipc-contract.md)
+- [M4 작업·인수 조건](tasks/M04-named-pipe-ipc.md)
+- [M4 실습 기록](docs/practice-M04.md)
 - [Native 종료 장애 대응](docs/troubleshooting.md)
 - [문서 유지 규칙](docs/documentation-rules.md)
 - [전체 단계와 Codex 루프 설계](InspectionLab-Architecture-and-Codex-Loop.md)
 
-다음 단계는 M4의 Named Pipe IPC와 별도 Client다. Native는 협조적 정지와 Wait를 제공하고 Host는 진행 통지를 출력한다. Wait 실패로 종료를 확인하지 못하면 자원을 보존하고 같은 엔진의 재접수를 거절한다. 복구는 Host 프로세스 재시작으로 수행한다. IPC, SQLite, C++/CLI, Codex 자동 반복 제어기, .NET 10 전환은 후속 작업이다.
+다음 단계는 M5의 SQLite 저장·검색과 구조화 진단이다. Native Wait 실패로 종료를 확인하지 못하면 자원을 보존하고 같은 엔진의 재접수를 거절하며 복구는 Host 재시작으로 수행한다. IPC의 시작 재전송 보장은 Host 수명 안으로 한정한다. SQLite, C++/CLI, Codex 자동 반복 제어기, .NET 10 전환은 후속 작업이다.
 
 구조나 계약을 결정할 때는 ADR을 한 건씩 추가하고 구현·아키텍처·관련 다이어그램과 함께 갱신한다. 전체 설계 문서는 단계별 계획으로 계속 커밋하며, 현재 구조와 결정 이력은 각각 architecture.md와 ADR에서 관리한다.

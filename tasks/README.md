@@ -10,7 +10,8 @@
 | [M3a — 단일 실행 제어](M03a-single-run-engine.md) | Verified | [M3a 실습](../docs/practice-M03a.md), 총 67개 필수 사례와 전체 검증 통과 |
 | [M3b — Native 비동기 종료](M03b-native-lifetime.md) | Verified | [M3b 실습](../docs/practice-M03b.md), 총 87개 필수 사례와 전체 검증 통과 |
 | [M3c — 순차 자동 반복](M03c-auto-sequence.md) | Verified | [M3c 실습](../docs/practice-M03c.md), 총 120개 필수 사례·자동 반복 JSON·전체 검증 통과 |
-| M4 — Named Pipe IPC | Planned | 별도 Client, 요청·응답·재접속·RequestId 중복 방지 |
+| [M4 — Named Pipe IPC](M04-named-pipe-ipc.md) | Verified | [M4 실습](../docs/practice-M04.md), 총 146개 필수 사례·프로세스 IPC·전체 검증 통과 |
+| M5 — 저장·진단 | Planned | SQLite 저장·검색, 구조화 로그와 장애 원인 추적 |
 
 ## 공통 완료 기준
 

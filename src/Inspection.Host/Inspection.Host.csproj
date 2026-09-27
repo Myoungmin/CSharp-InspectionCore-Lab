@@ -3,6 +3,8 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../Inspection.Contracts/Inspection.Contracts.csproj" />
+    <Compile Include="../Shared/PipeFrames.cs" Link="Transport/PipeFrames.cs" />
     <ProjectReference Include="../Inspection.Core/Inspection.Core.csproj" />
     <ProjectReference Include="../Inspection.Infrastructure/Inspection.Infrastructure.csproj" />
     <ProjectReference Include="../Inspection.Interop/Inspection.Interop.csproj" />

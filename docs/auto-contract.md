@@ -49,7 +49,7 @@ InspectionAutoSnapshot completed = await auto.Completion;
 Console.WriteLine($"{completed.AutoId}: {completed.State}, {completed.CompletedRuns}");
 ```
 
-Host는 `--repeat 3 --interval-ms 1000`으로 유한 반복을 실행한다. --repeat을 생략하면 기존 한 건 실행, 반복 간격 기본값은 1000ms다. --interval-ms는 --repeat과 함께 사용한다. `--timeout-ms`는 매 실행에 적용한다. Ctrl+C는 예약 중지 후 현재 RunId에 취소를 요청한다. CLI에는 별도의 StopAuto 대화형 명령이 없으며 원격 명령은 M4에서 연결한다.
+Host는 `--repeat 3 --interval-ms 1000`으로 유한 반복을 실행한다. --repeat을 생략하면 기존 한 건 실행, 반복 간격 기본값은 1000ms다. --interval-ms는 --repeat과 함께 사용한다. `--timeout-ms`는 매 실행에 적용한다. Ctrl+C는 예약 중지 후 현재 RunId에 취소를 요청한다. 한 건 CLI에는 별도의 StopAuto 대화형 명령이 없다. M4 서버 모드는 [IPC 계약](ipc-contract.md)의 StartAuto/StopAuto/CancelRun을 제공한다.
 
 콘솔에는 세션 요약과 마지막 실행의 RunId·결과를 출력하고, 모든 성공 실행은 고유 RunId.json 파일로 남긴다. 자동 성공은 0, 실행·예약 오류는 1, 인수 오류는 2, 시간 초과는 124, 중지는 130이다. 마지막 실행이 Succeeded여도 자동 세션의 중지·오류 종료 코드는 유지한다.
 

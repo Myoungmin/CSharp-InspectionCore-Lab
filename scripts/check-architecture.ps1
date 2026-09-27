@@ -8,9 +8,11 @@ $expected = @{
     'Inspection.Core' = @()
     'Inspection.Infrastructure' = @('Inspection.Core')
     'Inspection.Interop' = @('Inspection.Core')
-    'Inspection.Host' = @('Inspection.Core', 'Inspection.Infrastructure', 'Inspection.Interop')
+    'Inspection.Contracts' = @()
+    'Inspection.Client' = @('Inspection.Contracts')
+    'Inspection.Host' = @('Inspection.Core', 'Inspection.Infrastructure', 'Inspection.Interop', 'Inspection.Contracts')
     'Inspection.Tests' = @('Inspection.Core')
-    'Inspection.IntegrationTests' = @('Inspection.Core', 'Inspection.Infrastructure', 'Inspection.Interop')
+    'Inspection.IntegrationTests' = @('Inspection.Core', 'Inspection.Infrastructure', 'Inspection.Interop', 'Inspection.Contracts', 'Inspection.Client', 'Inspection.Host')
 }
 $projects = @(Get-ChildItem (Join-Path $repoRoot 'src'), (Join-Path $repoRoot 'tests') -Filter '*.csproj' -Recurse | Sort-Object BaseName)
 if ($projects.Count -ne $expected.Count) { throw 'Unexpected project count. Review the architecture policy.' }
@@ -51,6 +53,10 @@ $nativeProject = Join-Path $repoRoot 'native/NativeInspection/NativeInspection.v
 if (@($native.SelectNodes('//*[local-name()="ProjectReference"]')).Count -ne 0) { throw 'NativeInspection must not reference managed projects.' }
 $lines.Add('component "NativeInspection (C++ DLL)" as NativeInspection')
 $lines.Add('Inspection_Interop ..> NativeInspection : C ABI at runtime; no managed ProjectReference')
+$lines.Add('note right of Inspection_Core')
+$lines.Add('Core declares ports.')
+$lines.Add('No adapter references.')
+$lines.Add('end note')
 $lines.Add('@enduml')
 $generated = ($lines -join "`n") + "`n"
 $path = Join-Path $repoRoot 'docs/diagrams/dependencies.generated.puml'
@@ -60,4 +66,4 @@ if ($Update) {
 elseif (-not (Test-Path -LiteralPath $path) -or [IO.File]::ReadAllText($path).Replace("`r`n", "`n") -cne $generated) {
     throw 'Dependency diagram is stale. Run scripts/check-architecture.ps1 -Update.'
 }
-Write-Host 'Architecture: six managed projects and one native project; reference rules and framework/platform passed.'
+Write-Host 'Architecture: eight managed projects and one native project; reference rules and framework/platform passed.'

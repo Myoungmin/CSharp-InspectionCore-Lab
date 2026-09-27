@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Inspection.Contracts/Inspection.Contracts.csproj" />
+    <Compile Include="../Shared/PipeFrames.cs" Link="Transport/PipeFrames.cs" />
+  </ItemGroup>
+</Project>

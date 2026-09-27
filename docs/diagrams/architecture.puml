@@ -1,17 +1,23 @@
 @startuml architecture
 !pragma layout smetana
-title M3c runtime responsibilities (one console process)
+title M4 runtime responsibilities (Host and Client processes)
 skinparam componentStyle rectangle
 component "Host\ncreates dependencies" as Host
+component "Client process\nContracts DTO only" as Client
+component "Host\nNamed Pipe / Dispatcher" as Server
 component "Core\nInspectionEngine" as Engine
 component "Core\nInspectionRunner" as Core
-component "Infrastructure\nSimulatedDevice" as Device
+component "SimulatedDevice\noptional Host acquisition delay" as Device
 component "Infrastructure\nRangeInspector" as Inspector
 component "Interop\nNativeInspector" as Native
 component "NativeInspection.dll\nC ABI / worker and progress callbacks" as DLL
 component "Infrastructure\nJsonResultStore" as Store
 database "RunId.json" as Result
 Host --> Engine : Start / StartAuto / GetStatus / StopAuto / CancelRun
+Client <--> Server
+Host --> Server : owns / stops connections before engine disposal
+Server --> Engine : short admission and control calls
+Server --> Store
 Engine --> Core : one admitted run / shared persistence boundary / sequential repetition
 Host ..> Engine : await DisposeAsync before adapter disposal
 Core --> Device : IDevice
@@ -20,7 +26,7 @@ Core --> Native : IInspector (native)
 Native --> DLL : Start / RequestStop / Wait / SafeHandle
 Host ..> Native : owns / await DisposeAsync
 Core --> Store : IResultStore
-Store --> Result : publish after write
+Store --> Result
 note bottom of Core
 Calls ports declared by Core.
 No dependency on adapter assemblies.

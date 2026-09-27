@@ -24,12 +24,24 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Inspection.IntegrationTests
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NativeInspection", "native\NativeInspection\NativeInspection.vcxproj", "{0E22A606-C49B-446C-93E0-F72ECFBA5577}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Inspection.Contracts", "src\Inspection.Contracts\Inspection.Contracts.csproj", "{B53CB312-E04B-4C80-921E-F0E53625EF04}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Inspection.Client", "src\Inspection.Client\Inspection.Client.csproj", "{03154723-85D1-47E4-887E-B2A46A46EB98}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B53CB312-E04B-4C80-921E-F0E53625EF04}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B53CB312-E04B-4C80-921E-F0E53625EF04}.Debug|x64.Build.0 = Debug|Any CPU
+		{B53CB312-E04B-4C80-921E-F0E53625EF04}.Release|x64.ActiveCfg = Release|Any CPU
+		{B53CB312-E04B-4C80-921E-F0E53625EF04}.Release|x64.Build.0 = Release|Any CPU
+		{03154723-85D1-47E4-887E-B2A46A46EB98}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{03154723-85D1-47E4-887E-B2A46A46EB98}.Debug|x64.Build.0 = Debug|Any CPU
+		{03154723-85D1-47E4-887E-B2A46A46EB98}.Release|x64.ActiveCfg = Release|Any CPU
+		{03154723-85D1-47E4-887E-B2A46A46EB98}.Release|x64.Build.0 = Release|Any CPU
 		{0E22A606-C49B-446C-93E0-F72ECFBA5577}.Debug|x64.ActiveCfg = Debug|x64
 		{0E22A606-C49B-446C-93E0-F72ECFBA5577}.Debug|x64.Build.0 = Debug|x64
 		{0E22A606-C49B-446C-93E0-F72ECFBA5577}.Release|x64.ActiveCfg = Release|x64
@@ -63,6 +75,8 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{B53CB312-E04B-4C80-921E-F0E53625EF04} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{03154723-85D1-47E4-887E-B2A46A46EB98} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{F46E3A5F-A025-415A-9E04-71BC4C4D4009} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{931E80FE-C821-4D5D-BC55-97D66784B427} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{E4060396-3EA8-46F0-871A-25BFC0A8F748} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}

@@ -58,4 +58,32 @@ public sealed class JsonResultStoreTests
         await Assert.ThrowsExceptionAsync<OperationCanceledException>(() => new JsonResultStore(_directory).SaveAsync(result, cancellation.Token));
         Assert.IsFalse(Directory.Exists(_directory));
     }
+
+    [TestMethod]
+    public async Task Load_FromNewStoreInstance_RetainsIdentityAndAssessment()
+    {
+        var result = new InspectionResult(Guid.NewGuid(), "persisted", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, new InspectionAssessment(3, 1));
+        await new JsonResultStore(_directory).SaveAsync(result, CancellationToken.None);
+        Assert.AreEqual(result, await new JsonResultStore(_directory).LoadAsync(result.RunId, CancellationToken.None));
+    }
+
+    [TestMethod]
+    public async Task Load_MissingDirectoryOrFile_ReturnsNull()
+    {
+        var store = new JsonResultStore(_directory);
+        Assert.IsNull(await store.LoadAsync(Guid.NewGuid(), CancellationToken.None));
+        Directory.CreateDirectory(_directory);
+        Assert.IsNull(await store.LoadAsync(Guid.NewGuid(), CancellationToken.None));
+    }
+
+    [TestMethod]
+    public async Task Load_MismatchedStoredIdentity_IsRejected()
+    {
+        var store = new JsonResultStore(_directory);
+        Guid requested = Guid.NewGuid();
+        var result = new InspectionResult(Guid.NewGuid(), "wrong", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, new InspectionAssessment(1, 0));
+        await store.SaveAsync(result, CancellationToken.None);
+        File.Move(store.GetResultPath(result.RunId), store.GetResultPath(requested));
+        await Assert.ThrowsExceptionAsync<InvalidDataException>(() => store.LoadAsync(requested, CancellationToken.None));
+    }
 }

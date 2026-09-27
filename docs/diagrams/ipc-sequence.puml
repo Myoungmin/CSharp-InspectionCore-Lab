@@ -1,0 +1,39 @@
+@startuml ipc-sequence
+title M4: admission replay across connections
+actor Operator
+participant "Client process" as Client
+participant "Host / Pipe connection" as Pipe
+participant "Host / Dispatcher" as Dispatcher
+participant "Core / Engine" as Engine
+database "JSON store" as Store
+Operator -> Client : StartJob (RequestId A)
+Client -> Pipe : length + UTF-8 request
+Pipe -> Dispatcher : validate and dispatch
+group start-request lock
+Dispatcher -> Engine : Start(immutable job)
+Engine --> Dispatcher : Accepted (RunId R)
+Dispatcher -> Dispatcher : remember A, fingerprint, response
+end
+Dispatcher --> Pipe : admission only
+Pipe --> Client : response may be lost
+note over Engine
+Run continues independently of connection.
+Prepare -> Acquire -> Inspect -> Persist
+end note
+Client -> Pipe : reconnect / resend A
+Pipe -> Dispatcher : same ID and typed content
+Dispatcher --> Pipe : original Accepted / R
+Pipe --> Client : same RunId R
+Client -> Pipe : GetStatus (new RequestId)
+Pipe -> Engine : read snapshot through dispatcher
+Engine --> Pipe : current state / stage
+Pipe --> Client : correlated response
+Client -> Pipe : CancelRun R (new RequestId)
+Pipe -> Engine : explicit cancellation through dispatcher
+Engine --> Pipe : Accepted / AlreadyRequested / TooLate
+Pipe --> Client : cancellation disposition
+note over Engine, Store
+Cancellation before Persist prevents storage.
+After persistence entry, await the storage outcome.
+end note
+@enduml

@@ -1,6 +1,6 @@
 # 핵심 계약과 검증의 연결
 
-필수 시나리오의 기계 판정 기준은 [verification-map.json](verification-map.json)이다. 각 항목은 고유 ID, 관련 ADR, 소스 파일, 테스트 클래스·메서드, 데이터 사례 이름을 연결한다. M1의 19개와 M2의 23개 기준을 유지하고 M3a Engine 25개를 검토해 추가했다. M3b의 Native 수명 12개와 종료 실패 8개, M3c의 Core 31개·Native 자동 실행 2개를 추가해 전체 필수 사례는 120개이며 현재 결과에서 매번 자동 생성하지 않는다.
+필수 시나리오의 기계 판정 기준은 [verification-map.json](verification-map.json)이다. 각 항목은 고유 ID, 관련 ADR, 소스 파일, 테스트 클래스·메서드, 데이터 사례 이름을 연결한다. M1~M3c의 120개 기준을 유지하고 M4의 IPC 23개·파일 읽기 3개를 추가해 전체 146개다. 후보 실행 결과에서 매번 자동 생성하지 않는다.
 
 | 계약 | 결정 | 검증 위치 |
 | --- | --- | --- |
@@ -15,6 +15,10 @@
 | 참조 방향, ADR, 다이어그램, 상대 링크 | [문서 규칙](documentation-rules.md) | check-architecture.ps1, build-docs.ps1 |
 | 자동 접수·순차 반복·예약 중지·현재 취소·간격·실행별 시간 제한·종료 | [ADR-0010](adr/0010-sequential-auto-admission.md) | [InspectionAutoTests](../tests/Inspection.Tests/InspectionAutoTests.cs), M3C Core 31개 |
 | 실제 Native 콜백 중 자동 예약 중지와 현재 실행 취소 | [ADR-0010](adr/0010-sequential-auto-admission.md) | [NativeAutoTests](../tests/Inspection.IntegrationTests/NativeAutoTests.cs), M3C Native 2개 |
+| 실제 두 프로세스·접수·조회·취소·자동 중지·프레임·입력·종료 | [ADR-0011](adr/0011-named-pipe-protocol.md), [ADR-0012](adr/0012-start-request-replay.md) | [IpcTests](../tests/Inspection.IntegrationTests/IpcTests.cs), M4-001~015, 020: 21개 |
+| 동시 재전송·유실 응답·Busy 재전송·용량 제한·연결 독립 수명 | [ADR-0012](adr/0012-start-request-replay.md) | IpcTests의 M4-002~004, 009~011, 014 |
+| Client의 버전·RequestId 검증과 실패한 연결 폐기 | [ADR-0011](adr/0011-named-pipe-protocol.md) | [ClientProtocolTests](../tests/Inspection.IntegrationTests/ClientProtocolTests.cs), M4-016: 2개 |
+| 과거 JSON 읽기·파일 부재·저장 식별자 검증 | [ADR-0011](adr/0011-named-pipe-protocol.md) | [JsonResultStoreTests](../tests/Inspection.IntegrationTests/JsonResultStoreTests.cs), M4-017~019: 3개 |
 
 verify.ps1은 전체 실행 수·실패·skip 검사에 더해 `check-required-tests.ps1`로 각 필수 클래스·메서드·데이터 사례가 정확히 한 번 실행되어 Passed인지 확인한다. 다른 테스트가 늘어나 전체 수를 채워도 필수 사례 누락은 실패한다. 추가 테스트는 허용한다. TRX의 매 실행 UUID는 기준으로 사용하지 않는다.
 
@@ -22,4 +26,4 @@ MSTest의 언어별 표시 차이인 `Method(args)`와 `Method (args)`는 메서
 
 테스트 이름이나 데이터 사례가 정당하게 바뀌면 대응표도 같은 변경에서 수정하고 작업 기록에 이유를 남긴다. 필수 사례 삭제·대체는 계약이 계속 검증되는지 리뷰한다. 같은 이름의 테스트 안에서 assertion을 약화하는 것까지 이 검사가 탐지하지는 않는다. 테스트 내용과 계약 일치는 코드 리뷰 대상이다.
 
-Native·IPC·상태 계약이 확장되면 새 ID와 실제 사례를 추가한다. 미구현 M4 테스트를 통과 목록에 넣지 않는다. 자동 반복 제어기 도입 시 이 기준과 검증 명령을 후보 변경에서 보호하는 방법은 [보류 항목](backlog.md)에서 별도로 다룬다.
+Native·IPC·상태 계약이 확장되면 새 ID와 실제 사례를 추가한다. 미구현 단계의 테스트를 통과 목록에 넣지 않는다. 자동 반복 제어기 도입 시 이 기준과 검증 명령을 후보 변경에서 보호하는 방법은 [보류 항목](backlog.md)에서 별도로 다룬다.

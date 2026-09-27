@@ -22,6 +22,23 @@ public sealed class JsonResultStore : IResultStore
 
     public string GetResultPath(Guid runId) => Path.Combine(_directory, $"{runId:N}.json");
 
+    public async Task<InspectionResult?> LoadAsync(Guid runId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using var stream = new FileStream(GetResultPath(runId), FileMode.Open, FileAccess.Read,
+                FileShare.Read, 4096, FileOptions.Asynchronous);
+            var result = await JsonSerializer.DeserializeAsync<InspectionResult>(stream, JsonOptions, cancellationToken).ConfigureAwait(false);
+            if (result is null || result.RunId != runId || result.Assessment is null)
+            {
+                throw new InvalidDataException("Stored result identity or assessment is invalid.");
+            }
+            return result;
+        }
+        catch (FileNotFoundException) { return null; }
+        catch (DirectoryNotFoundException) { return null; }
+    }
+
     public async Task SaveAsync(InspectionResult result, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(result);

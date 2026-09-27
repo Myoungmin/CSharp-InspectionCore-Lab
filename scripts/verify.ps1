@@ -11,7 +11,7 @@ $powershell = Join-Path $PSHOME 'powershell.exe'
 $verificationId = [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssZ') + '-' + [Guid]::NewGuid().ToString('N').Substring(0, 8)
 $outputDir = Join-Path $repoRoot "artifacts/verification/$verificationId"
 New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
-$summary = [ordered]@{ milestone = 'M3c'; verificationId = $verificationId; status = 'Failed'; baselineCommit = $null; sourceHash = $null; nativeDllHash = $null; testsPassed = 0; integrationTestsPassed = 0; nativeTestsPassed = 0; smokeCases = @(); steps = @(); error = $null }
+$summary = [ordered]@{ milestone = 'M4'; verificationId = $verificationId; status = 'Failed'; baselineCommit = $null; sourceHash = $null; nativeDllHash = $null; testsPassed = 0; integrationTestsPassed = 0; nativeTestsPassed = 0; ipcTestsPassed = 0; smokeCases = @(); steps = @(); error = $null }
 
 function Get-SourceSnapshot {
     $paths = @(& git -C $repoRoot -c core.quotepath=false ls-files --cached --others --exclude-standard | Sort-Object -Unique)
@@ -51,6 +51,7 @@ try {
     # dotnet MSBuild cannot build vcxproj. Build the managed entrypoints and their references explicitly.
     $managedEntrypoints = [ordered]@{
         'host' = 'src/Inspection.Host/Inspection.Host.csproj'
+        'client' = 'src/Inspection.Client/Inspection.Client.csproj'
         'core-tests' = 'tests/Inspection.Tests/Inspection.Tests.csproj'
         'integration-tests' = 'tests/Inspection.IntegrationTests/Inspection.IntegrationTests.csproj'
     }
@@ -67,7 +68,7 @@ try {
     $testResults = @($trx.TestRun.Results.UnitTestResult)
     if ([int]$counters.total -lt 83 -or [int]$counters.executed -ne [int]$counters.total -or
         [int]$counters.passed -ne [int]$counters.total -or @($testResults | Where-Object { $_.outcome -ne 'Passed' }).Count -gt 0) {
-        throw 'M3c requires at least 83 executed, passing Core tests (52 existing + 31 auto cases), with no skipped or failed results.'
+        throw 'M4 retains all 83 executed, passing Core tests, with no skipped or failed results.'
     }
     $summary.testsPassed = [int]$counters.passed
 
@@ -78,16 +79,20 @@ try {
     [xml]$integrationTrx = [IO.File]::ReadAllText($integrationTrxPath)
     $integrationCounters = $integrationTrx.TestRun.ResultSummary.Counters
     $integrationResults = @($integrationTrx.TestRun.Results.UnitTestResult)
-    if ([int]$integrationCounters.total -lt 37 -or [int]$integrationCounters.executed -ne [int]$integrationCounters.total -or
+    if ([int]$integrationCounters.total -lt 63 -or [int]$integrationCounters.executed -ne [int]$integrationCounters.total -or
         [int]$integrationCounters.passed -ne [int]$integrationCounters.total -or $integrationResults.Count -ne [int]$integrationCounters.total -or
         @($integrationResults | Where-Object { $_.outcome -ne 'Passed' }).Count -gt 0) {
-        throw 'M3c requires at least 37 integration tests, all executed and passing; skip is not permitted.'
+        throw 'M4 requires at least 63 integration tests (34 native, 6 file, 23 IPC), all executed and passing; skip is not permitted.'
     }
     $nativeTestIds = @($integrationTrx.TestRun.TestDefinitions.UnitTest | Where-Object { $_.TestMethod.className -in @('Inspection.IntegrationTests.NativeInspectorTests', 'Inspection.IntegrationTests.NativeLifetimeTests', 'Inspection.IntegrationTests.NativeAutoTests') } | ForEach-Object { $_.id })
     $nativeResults = @($integrationResults | Where-Object { $_.testId -in $nativeTestIds })
     if ($nativeResults.Count -lt 34) { throw 'The 34 mandatory actual-DLL test cases were not executed.' }
     $summary.integrationTestsPassed = [int]$integrationCounters.passed
     $summary.nativeTestsPassed = $nativeResults.Count
+    $ipcTestIds = @($integrationTrx.TestRun.TestDefinitions.UnitTest | Where-Object { $_.TestMethod.className -in @('Inspection.IntegrationTests.IpcTests', 'Inspection.IntegrationTests.ClientProtocolTests') } | ForEach-Object { $_.id })
+    $ipcResults = @($integrationResults | Where-Object { $_.testId -in $ipcTestIds })
+    if ($ipcResults.Count -lt 23) { throw 'The 23 mandatory IPC test cases were not executed.' }
+    $summary.ipcTestsPassed = $ipcResults.Count
     $null = Invoke-Step 'required-test-cases' $powershell @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $PSScriptRoot 'check-required-tests.ps1'), '-CoreTrx', $trxPath, '-IntegrationTrx', $integrationTrxPath)
     foreach ($copy in @('src/Inspection.Host/bin/Release/net9.0/NativeInspection.dll', 'tests/Inspection.IntegrationTests/bin/Release/net9.0/NativeInspection.dll')) {
         if ((Get-FileHash -LiteralPath (Join-Path $repoRoot $copy) -Algorithm SHA256).Hash -ne $summary.nativeDllHash) { throw "Stale native DLL deployed to $copy" }

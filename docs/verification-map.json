@@ -860,6 +860,200 @@
                                        ],
                              "source":  "tests/Inspection.Tests/InspectionAutoTests.cs",
                              "adr":  "docs/adr/0010-sequential-auto-admission.md"
+                         },
+                         {
+                             "id":  "M4-001",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.IpcTests",
+                             "method":  "SeparateClientProcess_StartsAndRetrievesPersistedResult",
+                             "cases":  [
+                                           "SeparateClientProcess_StartsAndRetrievesPersistedResult (\"managed\",False)",
+                                           "SeparateClientProcess_StartsAndRetrievesPersistedResult (\"managed\",True)",
+                                           "SeparateClientProcess_StartsAndRetrievesPersistedResult (\"native\",False)",
+                                           "SeparateClientProcess_StartsAndRetrievesPersistedResult (\"native\",True)"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/IpcTests.cs",
+                             "adr":  "docs/adr/0011-named-pipe-protocol.md"
+                         },
+                         {
+                             "id":  "M4-002",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.IpcTests",
+                             "method":  "Reconnect_KeepsAcceptedRunAndAllowsBusyQueryAndCancel",
+                             "cases":  "Reconnect_KeepsAcceptedRunAndAllowsBusyQueryAndCancel",
+                             "source":  "tests/Inspection.IntegrationTests/IpcTests.cs",
+                             "adr":  "docs/adr/0012-start-request-replay.md"
+                         },
+                         {
+                             "id":  "M4-003",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.IpcTests",
+                             "method":  "ConcurrentDuplicateStarts_ReturnOneAdmissionAndRejectChangedContent",
+                             "cases":  "ConcurrentDuplicateStarts_ReturnOneAdmissionAndRejectChangedContent",
+                             "source":  "tests/Inspection.IntegrationTests/IpcTests.cs",
+                             "adr":  "docs/adr/0012-start-request-replay.md"
+                         },
+                         {
+                             "id":  "M4-004",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.IpcTests",
+                             "method":  "LostResponse_RetryAfterCompletionDoesNotStartAgainAndOldStatusRemains",
+                             "cases":  "LostResponse_RetryAfterCompletionDoesNotStartAgainAndOldStatusRemains",
+                             "source":  "tests/Inspection.IntegrationTests/IpcTests.cs",
+                             "adr":  "docs/adr/0012-start-request-replay.md"
+                         },
+                         {
+                             "id":  "M4-005",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.IpcTests",
+                             "method":  "PartialAndMultipleFrames_AreReadInOrderOnOneConnection",
+                             "cases":  "PartialAndMultipleFrames_AreReadInOrderOnOneConnection",
+                             "source":  "tests/Inspection.IntegrationTests/IpcTests.cs",
+                             "adr":  "docs/adr/0011-named-pipe-protocol.md"
+                         },
+                         {
+                             "id":  "M4-006",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.IpcTests",
+                             "method":  "InvalidFrameLength_ClosesOnlyThatConnection",
+                             "cases":  [
+                                           "InvalidFrameLength_ClosesOnlyThatConnection (0)",
+                                           "InvalidFrameLength_ClosesOnlyThatConnection (-1)",
+                                           "InvalidFrameLength_ClosesOnlyThatConnection (65537)"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/IpcTests.cs",
+                             "adr":  "docs/adr/0011-named-pipe-protocol.md"
+                         },
+                         {
+                             "id":  "M4-007",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.IpcTests",
+                             "method":  "MalformedEnvelopeAndTruncatedBody_DoNotPoisonServer",
+                             "cases":  "MalformedEnvelopeAndTruncatedBody_DoNotPoisonServer",
+                             "source":  "tests/Inspection.IntegrationTests/IpcTests.cs",
+                             "adr":  "docs/adr/0011-named-pipe-protocol.md"
+                         },
+                         {
+                             "id":  "M4-008",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.IpcTests",
+                             "method":  "UnsupportedVersionAndInvalidPayload_AreRejectedWithoutExecution",
+                             "cases":  "UnsupportedVersionAndInvalidPayload_AreRejectedWithoutExecution",
+                             "source":  "tests/Inspection.IntegrationTests/IpcTests.cs",
+                             "adr":  "docs/adr/0011-named-pipe-protocol.md"
+                         },
+                         {
+                             "id":  "M4-009",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.IpcTests",
+                             "method":  "AutoFailContinuesAndCompletedSessionCanBeReplayed",
+                             "cases":  "AutoFailContinuesAndCompletedSessionCanBeReplayed",
+                             "source":  "tests/Inspection.IntegrationTests/IpcTests.cs",
+                             "adr":  "docs/adr/0012-start-request-replay.md"
+                         },
+                         {
+                             "id":  "M4-010",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.IpcTests",
+                             "method":  "StopAutoWhileWaiting_ReleasesReservationWithoutCancelingLastRun",
+                             "cases":  "StopAutoWhileWaiting_ReleasesReservationWithoutCancelingLastRun",
+                             "source":  "tests/Inspection.IntegrationTests/IpcTests.cs",
+                             "adr":  "docs/adr/0012-start-request-replay.md"
+                         },
+                         {
+                             "id":  "M4-011",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.IpcTests",
+                             "method":  "StopAutoDuringAcquire_DoesNotCancelCurrentRun",
+                             "cases":  "StopAutoDuringAcquire_DoesNotCancelCurrentRun",
+                             "source":  "tests/Inspection.IntegrationTests/IpcTests.cs",
+                             "adr":  "docs/adr/0012-start-request-replay.md"
+                         },
+                         {
+                             "id":  "M4-012",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.IpcTests",
+                             "method":  "TimeoutAndStorageFailure_ReportTerminalCauseAndComputedDiagnostics",
+                             "cases":  "TimeoutAndStorageFailure_ReportTerminalCauseAndComputedDiagnostics",
+                             "source":  "tests/Inspection.IntegrationTests/IpcTests.cs",
+                             "adr":  "docs/adr/0011-named-pipe-protocol.md"
+                         },
+                         {
+                             "id":  "M4-013",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.IpcTests",
+                             "method":  "Shutdown_WithPartialFrameAndRunningWork_ExitsWithinDeadline",
+                             "cases":  "Shutdown_WithPartialFrameAndRunningWork_ExitsWithinDeadline",
+                             "source":  "tests/Inspection.IntegrationTests/IpcTests.cs",
+                             "adr":  "docs/adr/0011-named-pipe-protocol.md"
+                         },
+                         {
+                             "id":  "M4-014",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.IpcTests",
+                             "method":  "ReplayCapacity_DoesNotEvictAdmissionsOrBlockQueryAndCancel",
+                             "cases":  "ReplayCapacity_DoesNotEvictAdmissionsOrBlockQueryAndCancel",
+                             "source":  "tests/Inspection.IntegrationTests/IpcTests.cs",
+                             "adr":  "docs/adr/0012-start-request-replay.md"
+                         },
+                         {
+                             "id":  "M4-015",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.IpcTests",
+                             "method":  "UnknownIdentitiesAndCorruptStoredResult_ReturnExplicitErrors",
+                             "cases":  "UnknownIdentitiesAndCorruptStoredResult_ReturnExplicitErrors",
+                             "source":  "tests/Inspection.IntegrationTests/IpcTests.cs",
+                             "adr":  "docs/adr/0011-named-pipe-protocol.md"
+                         },
+                         {
+                             "id":  "M4-016",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.ClientProtocolTests",
+                             "method":  "MismatchedResponse_IsRejectedAndConnectionClosed",
+                             "cases":  [
+                                           "MismatchedResponse_IsRejectedAndConnectionClosed (False)",
+                                           "MismatchedResponse_IsRejectedAndConnectionClosed (True)"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/ClientProtocolTests.cs",
+                             "adr":  "docs/adr/0011-named-pipe-protocol.md"
+                         },
+                         {
+                             "id":  "M4-017",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.JsonResultStoreTests",
+                             "method":  "Load_FromNewStoreInstance_RetainsIdentityAndAssessment",
+                             "cases":  "Load_FromNewStoreInstance_RetainsIdentityAndAssessment",
+                             "source":  "tests/Inspection.IntegrationTests/JsonResultStoreTests.cs",
+                             "adr":  "docs/adr/0011-named-pipe-protocol.md"
+                         },
+                         {
+                             "id":  "M4-018",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.JsonResultStoreTests",
+                             "method":  "Load_MissingDirectoryOrFile_ReturnsNull",
+                             "cases":  "Load_MissingDirectoryOrFile_ReturnsNull",
+                             "source":  "tests/Inspection.IntegrationTests/JsonResultStoreTests.cs",
+                             "adr":  "docs/adr/0011-named-pipe-protocol.md"
+                         },
+                         {
+                             "id":  "M4-019",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.JsonResultStoreTests",
+                             "method":  "Load_MismatchedStoredIdentity_IsRejected",
+                             "cases":  "Load_MismatchedStoredIdentity_IsRejected",
+                             "source":  "tests/Inspection.IntegrationTests/JsonResultStoreTests.cs",
+                             "adr":  "docs/adr/0011-named-pipe-protocol.md"
+                         },
+                         {
+                             "id":  "M4-020",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.IpcTests",
+                             "method":  "RepeatedTruncatedConnections_DoNotExhaustListenerPool",
+                             "cases":  [
+                                           "RepeatedTruncatedConnections_DoNotExhaustListenerPool"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/IpcTests.cs",
+                             "adr":  "docs/adr/0011-named-pipe-protocol.md"
                          }
                      ]
 }

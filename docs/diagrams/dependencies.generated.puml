@@ -2,21 +2,32 @@
 !pragma layout smetana
 title Evaluated project references (Release / x64)
 skinparam componentStyle rectangle
+component "Inspection.Client" as Inspection_Client
+component "Inspection.Contracts" as Inspection_Contracts
 component "Inspection.Core" as Inspection_Core
 component "Inspection.Host" as Inspection_Host
 component "Inspection.Infrastructure" as Inspection_Infrastructure
 component "Inspection.IntegrationTests" as Inspection_IntegrationTests
 component "Inspection.Interop" as Inspection_Interop
 component "Inspection.Tests" as Inspection_Tests
+Inspection_Client --> Inspection_Contracts
+Inspection_Host --> Inspection_Contracts
 Inspection_Host --> Inspection_Core
 Inspection_Host --> Inspection_Infrastructure
 Inspection_Host --> Inspection_Interop
 Inspection_Infrastructure --> Inspection_Core
+Inspection_IntegrationTests --> Inspection_Client
+Inspection_IntegrationTests --> Inspection_Contracts
 Inspection_IntegrationTests --> Inspection_Core
+Inspection_IntegrationTests --> Inspection_Host
 Inspection_IntegrationTests --> Inspection_Infrastructure
 Inspection_IntegrationTests --> Inspection_Interop
 Inspection_Interop --> Inspection_Core
 Inspection_Tests --> Inspection_Core
 component "NativeInspection (C++ DLL)" as NativeInspection
 Inspection_Interop ..> NativeInspection : C ABI at runtime; no managed ProjectReference
+note right of Inspection_Core
+Core declares ports.
+No adapter references.
+end note
 @enduml

@@ -2,12 +2,12 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using Inspection.Contracts;
 using Inspection.Core;
-using Inspection.Infrastructure;
 using Inspection.Transport;
+using Microsoft.Data.Sqlite;
 
 namespace Inspection.Host;
 
-internal sealed class RequestDispatcher(InspectionEngine engine, JsonResultStore store)
+internal sealed class RequestDispatcher(InspectionEngine engine, IResultReader store, IResultSearch? search, JsonDiagnosticLog diagnostics)
 {
     private readonly object _gate = new();
     private readonly Dictionary<Guid, (string Fingerprint, ResponseEnvelope Response)> _starts = [];
@@ -25,6 +25,7 @@ internal sealed class RequestDispatcher(InspectionEngine engine, JsonResultStore
                 "StartJob" => Parse<StartJobRequest>(request),
                 "StartAuto" => Parse<StartAutoRequest>(request),
                 "GetStatus" => Parse<GetStatusRequest>(request),
+                "SearchResults" => Parse<SearchResultsRequest>(request),
                 "CancelRun" or "GetResult" => Parse<RunRequest>(request),
                 "StopAuto" => Parse<AutoRequest>(request),
                 _ => throw new ArgumentException("Unknown MessageType.")
@@ -35,6 +36,7 @@ internal sealed class RequestDispatcher(InspectionEngine engine, JsonResultStore
             {
                 if (_starts.TryGetValue(request.RequestId, out var previous))
                 {
+                    diagnostics.Write(previous.Fingerprint == fingerprint ? "StartReplayed" : "RequestIdConflict", requestId: request.RequestId);
                     return previous.Fingerprint == fingerprint ? previous.Response
                         : Error(request, ErrorCodes.RequestIdConflict, "RequestId already identifies another start request.");
                 }
@@ -61,16 +63,25 @@ internal sealed class RequestDispatcher(InspectionEngine engine, JsonResultStore
                     return Success(request, new ControlDto(engine.CancelRun(cancel.RunId).ToString()));
                 }
             }
-            var get = (RunRequest)command;
-            RequireId(get.RunId);
+            InspectionResultQuery? validated = command is SearchResultsRequest query ? ToQuery(query) : null;
+            Guid requestedRunId = command is RunRequest get ? get.RunId : Guid.Empty;
+            if (validated is null) { RequireId(requestedRunId); }
             try
             {
-                InspectionResult? result = await store.LoadAsync(get.RunId, readCancellation).ConfigureAwait(false);
+                if (validated is not null)
+                {
+                    if (search is null) { return Error(request, ErrorCodes.SearchNotSupported, "Search requires SQLite storage."); }
+                    InspectionResultPage page = await search.SearchAsync(validated, readCancellation).ConfigureAwait(false);
+                    return Success(request, new ResultPageDto(page.Items.Select(Map).ToArray(), page.NextCursor is { } cursor
+                        ? new ResultCursorDto(cursor.InspectedAtUtc, cursor.RunId) : null));
+                }
+                InspectionResult? result = await store.LoadAsync(requestedRunId, readCancellation).ConfigureAwait(false);
                 return result is null ? Error(request, ErrorCodes.ResultNotFound, "No persisted result exists for this RunId.")
                     : Success(request, Map(result));
             }
-            catch (Exception exception) when (exception is IOException or InvalidDataException or UnauthorizedAccessException or JsonException or ArgumentException)
+            catch (Exception exception) when (exception is IOException or InvalidDataException or UnauthorizedAccessException or JsonException or SqliteException or ArgumentException or FormatException)
             {
+                diagnostics.Write("StoreReadFailed", new { request.MessageType }, requestId: request.RequestId, error: exception);
                 return Error(request, ErrorCodes.StoreReadFailed, "The stored result could not be read.");
             }
         }
@@ -82,6 +93,18 @@ internal sealed class RequestDispatcher(InspectionEngine engine, JsonResultStore
             }
             return Error(request, ErrorCodes.InvalidRequest, "Unknown command, missing field or invalid payload.");
         }
+    }
+
+    private static InspectionResultQuery ToQuery(SearchResultsRequest query)
+    {
+        InspectionVerdict? verdict = query.Verdict switch
+        {
+            null => null, "Pass" => InspectionVerdict.Pass, "Fail" => InspectionVerdict.Fail,
+            _ => throw new ArgumentException("Unknown verdict.")
+        };
+        if (query.JobId?.Length > Protocol.MaxJobIdLength) { throw new ArgumentException("JobId exceeds the limit."); }
+        return new(query.FromUtc, query.ToUtc, verdict, query.JobId, query.Limit,
+            query.Cursor is { } cursor ? new InspectionResultCursor(cursor.InspectedAtUtc, cursor.RunId) : null);
     }
 
     private ResponseEnvelope Start(RequestEnvelope request, object command)

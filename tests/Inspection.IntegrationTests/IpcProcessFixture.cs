@@ -16,27 +16,32 @@ internal sealed class IpcProcessFixture : IAsyncDisposable
     private readonly CancellationTokenSource _deadline = new(TimeSpan.FromSeconds(20));
     internal string PipeName { get; } = "InspectionTest_" + Guid.NewGuid().ToString("N");
     internal string DirectoryPath { get; }
-    internal string ResultsPath => Path.Combine(DirectoryPath, "results");
+    internal string ResultsPath { get; }
+    internal string LogPath => Path.Combine(DirectoryPath, "events.jsonl");
+    private bool _disposed;
     internal string Root { get; }
     internal CancellationToken Token => _deadline.Token;
     internal string Configuration => new DirectoryInfo(AppContext.BaseDirectory).Parent!.Name;
 
-    private IpcProcessFixture(string inspector, int delay, bool blockedStorage)
+    private IpcProcessFixture(string inspector, int delay, bool blockedStorage, string store, string fault, string? resultsPath)
     {
         DirectoryInfo? directory = new(AppContext.BaseDirectory);
         while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "InspectionLab.sln"))) { directory = directory.Parent; }
         Root = directory?.FullName ?? throw new InvalidOperationException("Repository root not found.");
         DirectoryPath = Path.Combine(Root, "artifacts", "ipc-tests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(DirectoryPath);
+        ResultsPath = resultsPath ?? Path.Combine(DirectoryPath, "results");
         if (blockedStorage) { File.WriteAllText(ResultsPath, "Storage failure fixture"); }
         _host = Start("Inspection.Host", "--serve", "--pipe", PipeName, "--inspector", inspector,
-            "--device-delay-ms", delay.ToString(System.Globalization.CultureInfo.InvariantCulture), "--output", ResultsPath);
+            "--device-delay-ms", delay.ToString(System.Globalization.CultureInfo.InvariantCulture), "--output", ResultsPath,
+            "--store", store, "--fault", fault, "--log", LogPath);
         _errors = _host.StandardError.ReadToEndAsync();
     }
 
-    internal static async Task<IpcProcessFixture> LaunchAsync(string inspector = "managed", int delay = 0, bool blockedStorage = false)
+    internal static async Task<IpcProcessFixture> LaunchAsync(string inspector = "managed", int delay = 0, bool blockedStorage = false,
+        string store = "json", string fault = "none", string? resultsPath = null)
     {
-        var fixture = new IpcProcessFixture(inspector, delay, blockedStorage);
+        var fixture = new IpcProcessFixture(inspector, delay, blockedStorage, store, fault, resultsPath);
         try
         {
             string? ready = await fixture._host.StandardOutput.ReadLineAsync(fixture.Token);
@@ -117,6 +122,8 @@ internal sealed class IpcProcessFixture : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        if (_disposed) { return; }
+        _disposed = true;
         try
         {
             if (!_host.HasExited)

@@ -1,5 +1,5 @@
 @startuml cancel-shutdown-sequence
-title M3c current run stop, native join and Host-owned disposal
+title M5 current run stop, native join and Host-owned disposal
 actor User
 participant Host
 participant InspectionEngine as Engine
@@ -7,6 +7,7 @@ participant InspectionRunner as Runner
 participant NativeInspector as Inspector
 participant "Native DLL / worker" as DLL
 participant "Progress observer" as Observer
+participant "Host diagnostic sink" as Log
 Runner -> Inspector : InspectAsync(job, samples, token)
 Inspector -> Inspector : copy input / retain handle / root callback context
 Inspector -> DLL : Start(samples, callback, context)
@@ -33,7 +34,10 @@ Inspector --> Runner : termination error (confirmed=false)
 end
 Runner --> Engine : runner error
 Engine -> Engine : close arbitration / await token callbacks / dispose timer and CTS
-Engine -> Engine : Canceled or TimedOut; termination error overrides as Faulted
+Engine -> Engine : decide Canceled or TimedOut; termination error overrides as Faulted
+Engine -> Log : RunCompleted (outside engine lock, slot retained)
+Log --> Engine : return / diagnostic exceptions isolated
+Engine -> Engine : publish outcome / release slot
 Engine --> Host : completed snapshot (includes TerminationConfirmed)
 Host -> Engine : await DisposeAsync()
 Engine --> Host : Disposed, or remain Faulted
@@ -41,6 +45,7 @@ Host -> Inspector : await DisposeAsync()
 opt termination confirmed
 Inspector -> DLL : Destroy via SafeHandle
 end
+Host -> Log : dispose after engine and adapters
 note over Host, Engine
 Host shutdown closes admission and requests Shutdown before waiting.
 It also stops automatic scheduling and awaits auto session cleanup.

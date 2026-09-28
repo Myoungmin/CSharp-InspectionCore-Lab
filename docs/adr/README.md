@@ -35,7 +35,9 @@ ADR(Architecture Decision Record)은 **무엇을, 왜 선택했고 어떤 대가
 | [0009 — 종료 실패와 자원 보존](0009-termination-failure-quarantine.md) | Accepted | M3b 종료 미확인 장애·재접수 차단 |
 | [0010 — 순차 자동 실행과 예약](0010-sequential-auto-admission.md) | Accepted | M3c 수동/자동 배타·예약 중지·현재 취소 |
 | [0011 — DTO 경계와 Named Pipe 프레임](0011-named-pipe-protocol.md) | Accepted | M4 전송·버전·입력 제한·연결 격리 |
-| [0012 — 시작 요청 재전송과 실행 수명](0012-start-request-replay.md) | Accepted | M4 RequestId·조회 보존·재접속 |
+| [0012 — 시작 요청 재전송과 실행 수명](0012-start-request-replay.md) | Superseded | M4 RequestId·조회 보존·재접속; 0013으로 확장 |
+| [0013 — SQLite 결과와 독립 조회 포트](0013-sqlite-results-and-query.md) | Accepted | M5 저장·검색·기존 재전송 정책 유지 |
+| [0014 — 실행과 독립된 구조화 진단](0014-structured-diagnostics.md) | Accepted | M5 단계/완료 관찰·ID 연결·장애 주입 |
 
 ## 검증 범위
 

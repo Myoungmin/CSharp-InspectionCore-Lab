@@ -1,15 +1,17 @@
 # Repository instructions
 
-- Current implemented milestone: M4. Follow the accepted roadmap in `InspectionLab-Architecture-and-Codex-Loop.md`; implement one requested milestone/task at a time.
+- Current implemented milestone: M5. Follow the accepted roadmap in `InspectionLab-Architecture-and-Codex-Loop.md`; implement one requested milestone/task at a time.
 - Start tasks from `tasks/template.md`; keep `tasks/README.md` status/evidence and relevant `docs/backlog.md` revisit conditions current. Use the shared completion criteria and distinguish verified implementation from learning progress.
 - Core declares the device, inspector and storage ports. Core must not reference Infrastructure, Host, IPC DTOs or native imports.
 - Host composes dependencies and owns their lifetime. Runner borrows dependencies. Keep JobId separate from RunId.
 - Product Fail is a successful inspection outcome. Persistence must finish before reporting execution success. Preserve computed results for persistence diagnostics.
 - Engine admission, first stop cause, persistence entry and completion arbitration share one lock. Do not run external callbacks inline under it. Keep the slot busy until the runner and cancellation callbacks actually finish; await engine disposal before disposing Host-owned adapters. Native Start copies input; Wait must join work and callbacks before release. Termination failure faults the engine and blocks admission; an unconfirmed Wait retains its handle and callback context until process exit (ADR-0009).
 - Auto sessions reserve admission while running, waiting and stopping. StopAuto cancels scheduling only; CancelRun targets the current RunId. Reuse the same run path and continue only after Succeeded, including product Fail. Follow ADR-0010 for auto outcome and disposal rules.
-- Contracts contains wire DTOs/version/limits/error codes only; Client references Contracts only. Host owns framing/DTO conversion and process-lifetime StartJob/StartAuto replay (ADR-0011/0012). Commit admission responses before writing to a connection; disconnect must not cancel admitted work. Keep polling/control live when the start replay capacity is full. Core remains unaware of IPC.
+- Contracts contains wire DTOs/version/limits/error codes only; Client references Contracts only. Host owns framing/DTO conversion and process-lifetime StartJob/StartAuto replay (ADR-0011/0013). Commit admission responses before writing to a connection; disconnect must not cancel admitted work. Keep polling/control live when the start replay capacity is full. Core remains unaware of IPC.
 - Use standard .NET naming and English identifiers/comments in code. Explain learning points in Korean documentation.
 - Use .NET SDK 9.0.305, net9.0 and x64 until the explicit toolchain migration task. Commit package lock files.
+- Core owns read/search and diagnostic ports. Host selects JSON or SQLite and owns the JSONL sink; queries bypass engine admission. Run diagnostics execute outside the engine lock and finish before completion publication. Sink exceptions must not change run outcomes (ADR-0013/0014).
+- Infrastructure alone may directly reference Microsoft.Data.Sqlite 9.0.20. Preserve parameterized queries, commit-before-success and non-overwriting RunId keys. SQLite stores completed results, not request replay or engine state.
 - Required verification: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify.ps1`.
 - Read `docs/documentation-rules.md` for diagram updates. Generated SVG files are versioned; runtime results and logs under artifacts are not.
 - Follow `docs/adr/README.md`: record each architectural decision in a numbered ADR with context, alternatives, consequences and validation. Link applicable ADRs in the task record, or explain why existing decisions remain sufficient. Update the ADR index, architecture and relevant diagrams with the implementation. Replace an accepted decision through a new ADR with reciprocal supersession links; preserve its original rationale.
@@ -18,4 +20,4 @@
 - Changes to acceptance criteria, test counts or verification policies require an explanation in the task record, not silent weakening.
 - Maintain `docs/verification-map.json` when required scenarios change. Verification checks exact class/method/data-case identities in TRX as well as test counts. Never regenerate this baseline automatically from candidate test results.
 - Record actual build/test evidence separately from the user's demonstrated understanding. Historical learning files outside this repository are reference material.
-- The autonomous Codex retry controller remains a separate follow-up after the verification flow is stable; it is not implemented in M4.
+- The autonomous Codex retry controller remains a separate follow-up after the verification flow is stable; it is not implemented in M5.

@@ -41,7 +41,13 @@ foreach ($project in $projects) {
         $target = $projects | Where-Object { $_.FullName -eq $reference.FullPath }
         if (-not $target) { throw "Reference outside the known project set: $($reference.FullPath)" }
     }
-    if ($project.BaseName -notin @('Inspection.Tests', 'Inspection.IntegrationTests') -and @($evaluated.Items.PackageReference).Count -gt 0) {
+    if ($project.BaseName -eq 'Inspection.Infrastructure') {
+        $packages = @($evaluated.Items.PackageReference)
+        if ($packages.Count -ne 1 -or $packages[0].Identity -cne 'Microsoft.Data.Sqlite' -or $packages[0].Version -cne '9.0.20') {
+            throw 'Infrastructure requires only the pinned Microsoft.Data.Sqlite 9.0.20 direct package.'
+        }
+    }
+    elseif ($project.BaseName -notin @('Inspection.Tests', 'Inspection.IntegrationTests') -and @($evaluated.Items.PackageReference).Count -gt 0) {
         throw "Production projects must depend only on BCL and the approved project references: $($project.Name)"
     }
     foreach ($reference in $references) {

@@ -1,6 +1,6 @@
-# M4 IPC 계약
+# M5 IPC 계약
 
-Host와 Client는 서로 다른 프로세스다. Core에는 IPC 의존성이 없다. [ADR-0011](adr/0011-named-pipe-protocol.md)은 전송 경계, [ADR-0012](adr/0012-start-request-replay.md)는 재전송과 연결·작업 수명을 설명한다.
+Host와 Client는 서로 다른 프로세스다. Core에는 IPC 의존성이 없다. [ADR-0011](adr/0011-named-pipe-protocol.md)은 전송 경계, [ADR-0013](adr/0013-sqlite-results-and-query.md)은 기존 재전송·연결 수명을 유지하면서 저장소 선택과 검색을 확장한다. M4의 결정은 [ADR-0012](adr/0012-start-request-replay.md)에 보존한다.
 
 ![IPC sequence](diagrams/generated/ipc-sequence.svg)
 
@@ -46,6 +46,9 @@ Host는 `exit` 입력 또는 Ctrl+C로 새 연결/요청을 닫고 Engine을 종
 | CancelRun | RunId | Disposition: Accepted/AlreadyRequested/TooLate/NotFound |
 | StopAuto | AutoId | 같은 네 가지 Disposition |
 | GetResult | RunId | RunId, JobId, StartedAtUtc, InspectedAtUtc, Verdict, Score, SampleCount, DefectCount |
+| SearchResults | 선택 FromUtc, ToUtc, Verdict, JobId, Limit(기본 25), Cursor | Items, NextCursor; SQLite만 지원 |
+
+SearchResults는 검사 완료 시각의 시작 포함·끝 제외 범위, 정확한 JobId와 Pass/Fail, 최대 25개 페이지를 사용한다. 정렬·커서·요청 예시는 [저장·진단 사용법](storage-diagnostics.md)에 있다. 버전 1의 추가 명령이며 M4 서버에 보내면 InvalidRequest다. 기존 명령/필드는 유지한다.
 
 Job의 필드는 JobId, Samples, LowerBound, UpperBound다. 시간 값은 정수 0~4,294,967,294ms, MaxRuns는 양의 int다. timeout 0도 접수되고 실행 결과는 TimedOut이다. StartAuto 간격은 저장·정리가 끝난 뒤의 대기 시간이다. 제품 Fail은 실행 Succeeded이며 자동 반복이 계속된다.
 
@@ -55,9 +58,9 @@ Run에는 실행 상태·단계·종료 원인·시각·TerminationConfirmed·Co
 
 StartJob/StartAuto의 검증된 접수 응답은 Host 프로세스에서 최대 4,096개 보존한다. 같은 RequestId/명령/typed payload이면 첫 응답을 반환하며 배열 순서와 문자열 내용은 의미에 포함된다. JSON 속성 순서·공백·숫자의 동등한 DTO 표현과 선택 필드 기본값 차이는 정규화한다. ID에 다른 내용을 보내면 RequestIdConflict다. Busy를 재전송해도 Busy이므로 새 시도는 새 ID를 사용한다. 용량이 차면 새 시작만 거절하고 기존 재전송·조회·취소·예약 중지는 계속 가능하다.
 
-GetStatus/GetResult/CancelRun/StopAuto 응답은 캐시하지 않는다. 조회는 최신 상태, 제어는 현재 판단을 반환한다. 새 명령에는 새 ID를 사용한다. 시작에 사용한 ID를 다른 명령으로 재사용하면 충돌이다. 재시작 후 같은 시작 요청을 재전송하면 **새 실행이 생길 수 있다**. 영속 중복 방지는 없다.
+GetStatus/GetResult/SearchResults/CancelRun/StopAuto 응답은 캐시하지 않는다. 조회는 최신 상태, 제어는 현재 판단을 반환한다. 새 명령에는 새 ID를 사용한다. 시작에 사용한 ID를 다른 명령으로 재사용하면 충돌이다. 재시작 후 같은 시작 요청을 재전송하면 **새 실행이 생길 수 있다**. 영속 중복 방지는 없다.
 
-연결 단절·Client 시간 초과는 실행을 취소하지 않는다. 다시 접속해 원래 시작 요청을 재전송하여 ID를 얻거나 이미 받은 RunId/AutoId로 조회한다. 접수한 수동 실행과 자동 세션의 완료 상태는 Host 수명 동안 보관한다. 과거 자동 개별 실행 상태는 Core의 현재/마지막 범위까지만 제공한다. 성공한 과거 결과는 JSON 파일이 있으면 GetResult로 읽을 수 있으며, Core의 현재 실행과 무관하다. 파일이 없으면 ResultNotFound이며 그것만으로 실행 실패/진행 여부를 판단하지 않는다.
+연결 단절·Client 시간 초과는 실행을 취소하지 않는다. 다시 접속해 원래 시작 요청을 재전송하여 ID를 얻거나 이미 받은 RunId/AutoId로 조회한다. 접수한 수동 실행과 자동 세션의 완료 상태는 Host 수명 동안 보관한다. 과거 자동 개별 실행 상태는 Core의 현재/마지막 범위까지만 제공한다. 성공한 과거 결과는 선택한 JSON/SQLite 저장소에 있으면 GetResult로 읽을 수 있으며, Core의 현재 실행과 무관하다. 결과가 없으면 ResultNotFound이며 그것만으로 실행 실패/진행 여부를 판단하지 않는다.
 
 ## 오류와 격리
 
@@ -68,8 +71,9 @@ GetStatus/GetResult/CancelRun/StopAuto 응답은 캐시하지 않는다. 조회�
 | RequestIdConflict | 기존 시작 ID와 다른 내용 또는 명령 |
 | ReplayCapacityExceeded | 새로운 시작 ID를 보존할 공간 없음 |
 | RunNotFound / AutoNotFound | 보존 범위에 없는 상태 |
-| ResultNotFound | 게시된 JSON 결과 없음 |
-| StoreReadFailed | 저장 파일 읽기·파싱·식별 검증 실패 |
+| ResultNotFound | 선택한 저장소에 게시 결과 없음 |
+| StoreReadFailed | 저장소 읽기·파싱·식별 검증 실패 |
+| SearchNotSupported | JSON 저장 모드에서 검색 요청 |
 | ExecutionFailed / StopFailed | Run.ErrorCode의 실행·종료 진단 |
 
 잘못된 프레임 길이, 잘린 본문, 10초 프레임 기한 초과는 해당 연결을 닫는다. 파싱 불가능한 JSON envelope는 신뢰할 RequestId가 없으므로 응답 없이 닫는다. 유효한 envelope의 잘못된 명령은 원래 RequestId의 오류로 응답하고 연결을 유지한다. 한 연결의 오류가 다른 연결이나 Engine을 취소하지 않는다.

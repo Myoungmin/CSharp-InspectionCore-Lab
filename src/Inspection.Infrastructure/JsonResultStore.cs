@@ -4,7 +4,7 @@ using Inspection.Core;
 
 namespace Inspection.Infrastructure;
 
-public sealed class JsonResultStore : IResultStore
+public sealed class JsonResultStore : IResultStore, IResultReader
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {

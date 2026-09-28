@@ -1,0 +1,33 @@
+@startuml storage-diagnostics
+title M5: committed result and diagnostic publication
+participant "Host / IPC" as Host
+participant "Core Engine" as Engine
+participant "Runner" as Runner
+database "SQLite result store" as Store
+participant "Host JSONL log" as Log
+Host -> Engine : Start / StartAuto
+Engine --> Host : admission (RunId / AutoId)
+Engine -> Log : RunStarted / StageEntered (outside gate)
+Engine -> Runner : execute admitted run
+Runner -> Runner : Prepare / Acquire / Inspect
+Runner -> Engine : enter persistence under gate
+Engine --> Runner : Persisting
+Runner -> Store : INSERT in transaction
+alt commit succeeds
+Store --> Runner : persisted result
+Runner --> Engine : inspection result
+else constraint / busy failure
+Store --> Runner : exception / rollback
+Runner --> Engine : error with ComputedResult
+end
+Engine -> Engine : finish callbacks and timer / decide stable outcome
+Engine -> Log : RunCompleted with IDs and cause (outside gate)
+Log --> Engine : recorded or write failure isolated
+Engine -> Engine : publish snapshot / release slot / complete handle
+Host -> Store : GetResult / SearchResults
+Store --> Host : committed rows only
+note over Store : committed rows survive Host restart
+Host -> Engine : await DisposeAsync
+Engine --> Host : work and diagnostic calls finished
+Host -> Log : close after adapters and IPC stop
+@enduml

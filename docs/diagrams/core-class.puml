@@ -55,6 +55,31 @@ interface IInspector {
 interface IResultStore {
   SaveAsync(result, token)
 }
+interface IResultReader {
+  LoadAsync(runId, token)
+}
+interface IResultSearch {
+  SearchAsync(query, token)
+}
+class InspectionResultQuery {
+  FromUtc / ToUtc / Verdict / JobId
+  Limit (1..25) / Cursor
+}
+class InspectionResultPage {
+  Items / NextCursor
+}
+interface IInspectionDiagnostics {
+  Record(diagnostic)
+}
+class InspectionDiagnostic {
+  EventName / RunId / JobId / AutoId
+  Stage / Outcome
+}
+IResultReader ..> InspectionResult
+IResultSearch ..> InspectionResultQuery
+IResultSearch ..> InspectionResultPage
+InspectionEngine --> IInspectionDiagnostics : borrows / outside engine lock
+IInspectionDiagnostics ..> InspectionDiagnostic
 InspectionRunner --> IDevice : borrows
 InspectionEngine --> InspectionRunner : borrows / one active run
 InspectionEngine ..> InspectionRunHandle : admission

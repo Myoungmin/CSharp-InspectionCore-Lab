@@ -1,6 +1,6 @@
 # InspectionLab — 아키텍처와 Codex 개발 루프 제안
 
-작성일: 2026-09-26. 구현 착수: 2026-09-27. 이 문서는 전체 단계의 설계이며, 현재 구현 범위는 M4까지다. 현재 코드의 계약은 [아키텍처](docs/architecture.md), [Native ABI](docs/native-interop.md), [Engine 계약](docs/engine-contract.md), [IPC 계약](docs/ipc-contract.md)에 있다. 실제 증거는 [M1 기록](docs/practice-M01.md), [M2 기록](docs/practice-M02.md), [M3a 기록](docs/practice-M03a.md), [M3b 기록](docs/practice-M03b.md), [M3c 기록](docs/practice-M03c.md), [M4 기록](docs/practice-M04.md)에서 구분한다. M5 이후와 Codex 자동 반복 제어기는 후속 계획이다. 기존 학습 진도를 구현 완료로 변경하지 않는다.
+작성일: 2026-09-26. 구현 착수: 2026-09-27. 이 문서는 전체 단계의 설계이며, 현재 구현 범위는 M5까지다. 현재 코드의 계약은 [아키텍처](docs/architecture.md), [Native ABI](docs/native-interop.md), [Engine 계약](docs/engine-contract.md), [IPC 계약](docs/ipc-contract.md), [저장·진단](docs/storage-diagnostics.md)에 있다. 실제 증거는 [M1 기록](docs/practice-M01.md), [M2 기록](docs/practice-M02.md), [M3a 기록](docs/practice-M03a.md), [M3b 기록](docs/practice-M03b.md), [M3c 기록](docs/practice-M03c.md), [M4 기록](docs/practice-M04.md), [M5 기록](docs/practice-M05.md)에서 구분한다. M6와 Codex 자동 반복 제어기는 후속 계획이다. 기존 학습 진도를 구현 완료로 변경하지 않는다.
 
 ## 1. 목표와 근거
 

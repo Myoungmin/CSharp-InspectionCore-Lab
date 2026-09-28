@@ -5,16 +5,18 @@ public sealed partial class InspectionEngine : IAsyncDisposable
     private readonly object _gate = new();
     private readonly InspectionRunner _runner;
     private readonly TimeProvider _timeProvider;
+    private readonly IInspectionDiagnostics? _diagnostics;
     private InspectionEngineState _state = InspectionEngineState.Ready;
     private ActiveRun? _active;
     private InspectionRunSnapshot? _last;
     private Exception? _error;
     private Task? _disposeTask;
 
-    public InspectionEngine(InspectionRunner runner, TimeProvider? timeProvider = null)
+    public InspectionEngine(InspectionRunner runner, TimeProvider? timeProvider = null, IInspectionDiagnostics? diagnostics = null)
     {
         _runner = runner ?? throw new ArgumentNullException(nameof(runner));
         _timeProvider = timeProvider ?? TimeProvider.System;
+        _diagnostics = diagnostics;
     }
 
     public InspectionStartResult Start(InspectionJob job, TimeSpan? timeout = null)
@@ -40,7 +42,7 @@ public sealed partial class InspectionEngine : IAsyncDisposable
 
     private ActiveRun StartRunLocked(InspectionJob job, TimeSpan? timeout)
     {
-        var run = new ActiveRun(job, _timeProvider.GetUtcNow());
+        var run = new ActiveRun(job, _timeProvider.GetUtcNow(), _auto?.AutoId);
         _active = run;
         try
         {
@@ -143,12 +145,17 @@ public sealed partial class InspectionEngine : IAsyncDisposable
 
     private async Task ExecuteAsync(ActiveRun run)
     {
+        Record(new("RunStarted", run.RunId, run.Job.JobId, AutoId: run.AutoId));
         InspectionResult? result = null;
         Exception? error = null;
         try
         {
             result = await _runner.RunAsync(run.Job, run.RunId, computed => EnterPersistence(run, computed),
-                stage => { lock (_gate) { run.Stage = stage; } }, run.Cancellation.Token).ConfigureAwait(false);
+                stage =>
+                {
+                    lock (_gate) { run.Stage = stage; }
+                    Record(new("StageEntered", run.RunId, run.Job.JobId, stage, AutoId: run.AutoId));
+                }, run.Cancellation.Token).ConfigureAwait(false);
         }
         catch (Exception exception) { error = exception; }
 
@@ -167,38 +174,50 @@ public sealed partial class InspectionEngine : IAsyncDisposable
         catch (Exception exception) { stopError = stopError is null ? exception : new AggregateException(stopError, exception); }
         run.Cancellation.Dispose();
 
+        InspectionRunSnapshot completed;
+        Exception? healthError;
         lock (_gate)
         {
-            run.Error = error;
-            run.StopError = stopError;
-            run.ComputedResult = result ?? (error as InspectionRunException)?.ComputedResult ?? run.ComputedResult;
-            run.CompletedAtUtc = _timeProvider.GetUtcNow();
+            InspectionResult? computed = result ?? (error as InspectionRunException)?.ComputedResult ?? run.ComputedResult;
             var terminationError = (error as InspectionRunException)?.InnerException as InspectionTerminationException;
-            run.State = stopError is not null || terminationError is not null ? InspectionRunState.Faulted
+            InspectionRunState state = stopError is not null || terminationError is not null ? InspectionRunState.Faulted
                 : run.StopReason == InspectionStopReason.Timeout ? InspectionRunState.TimedOut
                 : run.StopReason is not null ? InspectionRunState.Canceled
                 : error is not null ? InspectionRunState.Faulted : InspectionRunState.Succeeded;
-            if (stopError is not null || terminationError is not null)
-            {
-                _error = stopError ?? terminationError;
-                _state = InspectionEngineState.Faulted;
-            }
-            _last = run.Snapshot();
+            healthError = stopError ?? terminationError;
+            completed = new(run.RunId, run.Job.JobId, state, run.Stage, run.StopReason, run.AcceptedAtUtc,
+                _timeProvider.GetUtcNow(), computed, error, stopError);
+        }
+        // Keep the reservation until diagnostics returns, outside the engine lock.
+        // Completion and Dispose must not race disposal of the Host-owned sink.
+        Record(new("RunCompleted", run.RunId, run.Job.JobId, run.Stage, completed, run.AutoId));
+        lock (_gate)
+        {
+            if (healthError is not null) { _error = healthError; _state = InspectionEngineState.Faulted; }
+            _last = completed;
             _active = null;
             run.Completion.SetResult(_last);
         }
     }
 
+    private void Record(InspectionDiagnostic diagnostic)
+    {
+        try { _diagnostics?.Record(diagnostic); }
+        catch (Exception) { /* Diagnostics must not replace the execution outcome. */ }
+    }
+
     private sealed class ActiveRun
     {
-        internal ActiveRun(InspectionJob job, DateTimeOffset acceptedAtUtc)
+        internal ActiveRun(InspectionJob job, DateTimeOffset acceptedAtUtc, Guid? autoId)
         {
             Job = job;
             AcceptedAtUtc = acceptedAtUtc;
+            AutoId = autoId;
             Handle = new(RunId, job.JobId, Completion.Task);
         }
 
         internal Guid RunId { get; } = Guid.NewGuid();
+        internal Guid? AutoId { get; }
         internal InspectionJob Job { get; }
         internal DateTimeOffset AcceptedAtUtc { get; }
         internal InspectionRunHandle Handle { get; }
@@ -210,12 +229,9 @@ public sealed partial class InspectionEngine : IAsyncDisposable
         internal InspectionRunState State { get; set; } = InspectionRunState.Running;
         internal InspectionStage? Stage { get; set; }
         internal InspectionStopReason? StopReason { get; set; }
-        internal DateTimeOffset? CompletedAtUtc { get; set; }
         internal InspectionResult? ComputedResult { get; set; }
-        internal Exception? Error { get; set; }
-        internal Exception? StopError { get; set; }
 
         internal InspectionRunSnapshot Snapshot() => new(RunId, Job.JobId, State, Stage, StopReason,
-            AcceptedAtUtc, CompletedAtUtc, ComputedResult, Error, StopError);
+            AcceptedAtUtc, null, ComputedResult, null, null);
     }
 }

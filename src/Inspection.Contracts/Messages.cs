@@ -21,6 +21,7 @@ public static class ErrorCodes
     public const string AutoNotFound = "AutoNotFound";
     public const string ResultNotFound = "ResultNotFound";
     public const string StoreReadFailed = "StoreReadFailed";
+    public const string SearchNotSupported = "SearchNotSupported";
     public const string ExecutionFailed = "ExecutionFailed";
     public const string StopFailed = "StopFailed";
 }
@@ -32,6 +33,10 @@ public sealed record StartJobRequest(JobDto Job, long? TimeoutMilliseconds = nul
 public sealed record StartAutoRequest(JobDto Job, long IntervalMilliseconds, long? TimeoutMilliseconds = null, int? MaxRuns = null);
 public sealed record GetStatusRequest(Guid? RunId = null, Guid? AutoId = null);
 public sealed record RunRequest(Guid RunId);
+public sealed record ResultCursorDto(DateTimeOffset InspectedAtUtc, Guid RunId);
+public sealed record SearchResultsRequest(DateTimeOffset? FromUtc = null, DateTimeOffset? ToUtc = null,
+    string? Verdict = null, string? JobId = null, int Limit = 25, ResultCursorDto? Cursor = null);
+public sealed record ResultPageDto(ResultDto[] Items, ResultCursorDto? NextCursor);
 public sealed record AutoRequest(Guid AutoId);
 public sealed record AdmissionDto(string Disposition, Guid? RunId, Guid? AutoId, Guid? BusyRunId, Guid? BusyAutoId);
 public sealed record ControlDto(string Disposition);

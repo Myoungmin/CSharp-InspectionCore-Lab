@@ -1,5 +1,5 @@
 @startuml run-sequence
-title M3c one successful run (manual or admitted by auto session)
+title M5 one successful run (manual or admitted by auto session)
 actor User
 participant Host
 participant InspectionEngine as Engine
@@ -8,6 +8,7 @@ participant IDevice as Device
 participant IInspector as Inspector
 participant "NativeInspection.dll" as DLL
 participant IResultStore as Store
+participant "Host diagnostic sink" as Log
 User -> Host : run pass or fail scenario
 Host -> Engine : Start(job, timeout)
 Engine -> Engine : reserve slot / create RunId
@@ -33,10 +34,12 @@ Runner -> Engine : enter persistence under shared lock
 Engine --> Runner : Persisting
 note right of Runner : cancellation accepted before this point prevents saving
 Runner -> Store : SaveAsync(result, CancellationToken.None)
-Store -> Store : write temporary file, then rename
+Store -> Store : JSON publish or SQLite commit
 Store --> Runner : persisted
 Runner --> Engine : InspectionResult
 Engine -> Engine : close stop admission / finish callbacks and timer cleanup
+Engine -> Log : RunCompleted (outside engine lock)
+Log --> Engine : return / diagnostic exceptions isolated
 Engine -> Engine : Succeeded / release slot / complete handle
 Engine --> Host : await handle.Completion
 Host --> User : Succeeded + RunId + verdict + result path
@@ -45,6 +48,7 @@ opt native inspector selected
 Host -> Inspector : await DisposeAsync()
 Inspector -> DLL : inspection_destroy(handle) via SafeHandle
 end
+Host -> Log : dispose after engine and adapters
 note over Runner, Store
 Late cancellation or timeout cannot replace storage outcome.
 Save failure throws InspectionRunException with the computed result.

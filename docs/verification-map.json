@@ -1054,6 +1054,271 @@
                                        ],
                              "source":  "tests/Inspection.IntegrationTests/IpcTests.cs",
                              "adr":  "docs/adr/0011-named-pipe-protocol.md"
+                         },
+                         {
+                             "id":  "M5-001",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.ResultQueryTests",
+                             "method":  "Query_RejectsInvalidBoundsAndFilters",
+                             "cases":  [
+                                           "Query_RejectsInvalidBoundsAndFilters (\"zero\")",
+                                           "Query_RejectsInvalidBoundsAndFilters (\"large\")",
+                                           "Query_RejectsInvalidBoundsAndFilters (\"range\")",
+                                           "Query_RejectsInvalidBoundsAndFilters (\"verdict\")",
+                                           "Query_RejectsInvalidBoundsAndFilters (\"job\")",
+                                           "Query_RejectsInvalidBoundsAndFilters (\"cursor\")"
+                                       ],
+                             "source":  "tests/Inspection.Tests/ResultQueryTests.cs",
+                             "adr":  "docs/adr/0013-sqlite-results-and-query.md"
+                         },
+                         {
+                             "id":  "M5-002",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.ResultQueryTests",
+                             "method":  "Query_NormalizesUtcAndRetainsExactJobAndCursor",
+                             "cases":  [
+                                           "Query_NormalizesUtcAndRetainsExactJobAndCursor"
+                                       ],
+                             "source":  "tests/Inspection.Tests/ResultQueryTests.cs",
+                             "adr":  "docs/adr/0013-sqlite-results-and-query.md"
+                         },
+                         {
+                             "id":  "M5-003",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.DiagnosticTests",
+                             "method":  "ThrowingDiagnostics_PreservesOutcomeAndStageOrder",
+                             "cases":  [
+                                           "ThrowingDiagnostics_PreservesOutcomeAndStageOrder (False)",
+                                           "ThrowingDiagnostics_PreservesOutcomeAndStageOrder (True)"
+                                       ],
+                             "source":  "tests/Inspection.Tests/DiagnosticTests.cs",
+                             "adr":  "docs/adr/0014-structured-diagnostics.md"
+                         },
+                         {
+                             "id":  "M5-004",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.DiagnosticTests",
+                             "method":  "FinalDiagnostic_IsOutsideGateAndFinishesBeforeCompletionAndDispose",
+                             "cases":  [
+                                           "FinalDiagnostic_IsOutsideGateAndFinishesBeforeCompletionAndDispose"
+                                       ],
+                             "source":  "tests/Inspection.Tests/DiagnosticTests.cs",
+                             "adr":  "docs/adr/0014-structured-diagnostics.md"
+                         },
+                         {
+                             "id":  "M5-005",
+                             "suite":  "core",
+                             "className":  "Inspection.Tests.DiagnosticTests",
+                             "method":  "AutoDiagnostics_ContainsEveryDistinctCompletedRun",
+                             "cases":  [
+                                           "AutoDiagnostics_ContainsEveryDistinctCompletedRun"
+                                       ],
+                             "source":  "tests/Inspection.Tests/DiagnosticTests.cs",
+                             "adr":  "docs/adr/0014-structured-diagnostics.md"
+                         },
+                         {
+                             "id":  "M5-006",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.SqliteResultStoreTests",
+                             "method":  "CommittedResult_SurvivesNewStoreAndConnection",
+                             "cases":  [
+                                           "CommittedResult_SurvivesNewStoreAndConnection (0)",
+                                           "CommittedResult_SurvivesNewStoreAndConnection (1)"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/SqliteResultStoreTests.cs",
+                             "adr":  "docs/adr/0013-sqlite-results-and-query.md"
+                         },
+                         {
+                             "id":  "M5-007",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.SqliteResultStoreTests",
+                             "method":  "DuplicateRunId_RejectsOverwriteAndRetainsOriginal",
+                             "cases":  [
+                                           "DuplicateRunId_RejectsOverwriteAndRetainsOriginal"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/SqliteResultStoreTests.cs",
+                             "adr":  "docs/adr/0013-sqlite-results-and-query.md"
+                         },
+                         {
+                             "id":  "M5-008",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.SqliteResultStoreTests",
+                             "method":  "Search_UsesInclusiveStartExclusiveEndVerdictAndExactParameterizedJob",
+                             "cases":  [
+                                           "Search_UsesInclusiveStartExclusiveEndVerdictAndExactParameterizedJob"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/SqliteResultStoreTests.cs",
+                             "adr":  "docs/adr/0013-sqlite-results-and-query.md"
+                         },
+                         {
+                             "id":  "M5-009",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.SqliteResultStoreTests",
+                             "method":  "CursorPagination_UsesRunIdTieBreakerWithoutDuplicates",
+                             "cases":  [
+                                           "CursorPagination_UsesRunIdTieBreakerWithoutDuplicates"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/SqliteResultStoreTests.cs",
+                             "adr":  "docs/adr/0013-sqlite-results-and-query.md"
+                         },
+                         {
+                             "id":  "M5-010",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.SqliteResultStoreTests",
+                             "method":  "AbortedInsert_RollsBackAndStoreCanRecover",
+                             "cases":  [
+                                           "AbortedInsert_RollsBackAndStoreCanRecover"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/SqliteResultStoreTests.cs",
+                             "adr":  "docs/adr/0013-sqlite-results-and-query.md"
+                         },
+                         {
+                             "id":  "M5-011",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.SqliteResultStoreTests",
+                             "method":  "LockedWriter_FailsWithinDeadlineWithoutPublishingResult",
+                             "cases":  [
+                                           "LockedWriter_FailsWithinDeadlineWithoutPublishingResult"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/SqliteResultStoreTests.cs",
+                             "adr":  "docs/adr/0013-sqlite-results-and-query.md"
+                         },
+                         {
+                             "id":  "M5-012",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.SqliteResultStoreTests",
+                             "method":  "UncommittedInsert_IsInvisibleAndRollbackRemovesIt",
+                             "cases":  [
+                                           "UncommittedInsert_IsInvisibleAndRollbackRemovesIt"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/SqliteResultStoreTests.cs",
+                             "adr":  "docs/adr/0013-sqlite-results-and-query.md"
+                         },
+                         {
+                             "id":  "M5-013",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.SqliteResultStoreTests",
+                             "method":  "UnknownSchema_IsRejectedWithoutChangingIt",
+                             "cases":  [
+                                           "UnknownSchema_IsRejectedWithoutChangingIt (False)",
+                                           "UnknownSchema_IsRejectedWithoutChangingIt (True)"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/SqliteResultStoreTests.cs",
+                             "adr":  "docs/adr/0013-sqlite-results-and-query.md"
+                         },
+                         {
+                             "id":  "M5-014",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.SqliteResultStoreTests",
+                             "method":  "PreCanceledSave_DoesNotCreateDatabase",
+                             "cases":  [
+                                           "PreCanceledSave_DoesNotCreateDatabase"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/SqliteResultStoreTests.cs",
+                             "adr":  "docs/adr/0013-sqlite-results-and-query.md"
+                         },
+                         {
+                             "id":  "M5-015",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.StorageDiagnosticsTests",
+                             "method":  "SqliteCliAuto_PersistsEveryFailAndLogsEveryCompletion",
+                             "cases":  [
+                                           "SqliteCliAuto_PersistsEveryFailAndLogsEveryCompletion (\"managed\")",
+                                           "SqliteCliAuto_PersistsEveryFailAndLogsEveryCompletion (\"native\")"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/StorageDiagnosticsTests.cs",
+                             "adr":  "docs/adr/0014-structured-diagnostics.md"
+                         },
+                         {
+                             "id":  "M5-016",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.StorageDiagnosticsTests",
+                             "method":  "RestartHost_RetainsResultsAndSearchButNotRequestReplay",
+                             "cases":  [
+                                           "RestartHost_RetainsResultsAndSearchButNotRequestReplay (\"managed\")",
+                                           "RestartHost_RetainsResultsAndSearchButNotRequestReplay (\"native\")"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/StorageDiagnosticsTests.cs",
+                             "adr":  "docs/adr/0013-sqlite-results-and-query.md"
+                         },
+                         {
+                             "id":  "M5-017",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.StorageDiagnosticsTests",
+                             "method":  "StorageFault_PreservesComputedResultAndCorrelatesRequestAndRun",
+                             "cases":  [
+                                           "StorageFault_PreservesComputedResultAndCorrelatesRequestAndRun (\"json\")",
+                                           "StorageFault_PreservesComputedResultAndCorrelatesRequestAndRun (\"sqlite\")"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/StorageDiagnosticsTests.cs",
+                             "adr":  "docs/adr/0014-structured-diagnostics.md"
+                         },
+                         {
+                             "id":  "M5-018",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.StorageDiagnosticsTests",
+                             "method":  "NativeFault_LogsOperationAndTerminationCertainty",
+                             "cases":  [
+                                           "NativeFault_LogsOperationAndTerminationCertainty (\"native-inspect\",\"Inspect\",True)",
+                                           "NativeFault_LogsOperationAndTerminationCertainty (\"native-wait\",\"Wait\",False)"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/StorageDiagnosticsTests.cs",
+                             "adr":  "docs/adr/0014-structured-diagnostics.md"
+                         },
+                         {
+                             "id":  "M5-019",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.StorageDiagnosticsTests",
+                             "method":  "DroppedAdmissionResponse_IsTraceableAndReplayDoesNotDuplicateResult",
+                             "cases":  [
+                                           "DroppedAdmissionResponse_IsTraceableAndReplayDoesNotDuplicateResult"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/StorageDiagnosticsTests.cs",
+                             "adr":  "docs/adr/0014-structured-diagnostics.md"
+                         },
+                         {
+                             "id":  "M5-020",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.StorageDiagnosticsTests",
+                             "method":  "MalformedIpc_LogsConnectionFailureAndLeavesServerUsable",
+                             "cases":  [
+                                           "MalformedIpc_LogsConnectionFailureAndLeavesServerUsable"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/StorageDiagnosticsTests.cs",
+                             "adr":  "docs/adr/0014-structured-diagnostics.md"
+                         },
+                         {
+                             "id":  "M5-021",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.StorageDiagnosticsTests",
+                             "method":  "LockedSqlite_RemainsControllableAndLogsDatabaseErrorCode",
+                             "cases":  [
+                                           "LockedSqlite_RemainsControllableAndLogsDatabaseErrorCode"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/StorageDiagnosticsTests.cs",
+                             "adr":  "docs/adr/0014-structured-diagnostics.md"
+                         },
+                         {
+                             "id":  "M5-022",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.StorageDiagnosticsTests",
+                             "method":  "Search_RejectsInvalidPayloadAndReportsJsonUnsupported",
+                             "cases":  [
+                                           "Search_RejectsInvalidPayloadAndReportsJsonUnsupported"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/StorageDiagnosticsTests.cs",
+                             "adr":  "docs/adr/0013-sqlite-results-and-query.md"
+                         },
+                         {
+                             "id":  "M5-023",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.StorageDiagnosticsTests",
+                             "method":  "CorruptStoredIdentity_IsReadFailureAndDoesNotTerminateServer",
+                             "cases":  [
+                                           "CorruptStoredIdentity_IsReadFailureAndDoesNotTerminateServer"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/StorageDiagnosticsTests.cs",
+                             "adr":  "docs/adr/0013-sqlite-results-and-query.md"
                          }
                      ]
 }

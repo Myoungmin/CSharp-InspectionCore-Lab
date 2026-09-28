@@ -1,6 +1,6 @@
 # 핵심 계약과 검증의 연결
 
-필수 시나리오의 기계 판정 기준은 [verification-map.json](verification-map.json)이다. 각 항목은 고유 ID, 관련 ADR, 소스 파일, 테스트 클래스·메서드, 데이터 사례 이름을 연결한다. M1~M3c의 120개 기준을 유지하고 M4의 IPC 23개·파일 읽기 3개를 추가해 전체 146개다. 후보 실행 결과에서 매번 자동 생성하지 않는다.
+필수 시나리오의 기계 판정 기준은 [verification-map.json](verification-map.json)이다. 각 항목은 고유 ID, 관련 ADR, 소스 파일, 테스트 클래스·메서드, 데이터 사례 이름을 연결한다. M4까지의 146개 기준을 유지하고 M5의 Core 11개·SQLite 11개·저장 및 진단 프로세스 13개를 추가해 전체 181개다. 117개 항목으로 정확한 클래스·메서드·데이터 사례를 지정한다. 후보 실행 결과에서 매번 자동 생성하지 않는다.
 
 | 계약 | 결정 | 검증 위치 |
 | --- | --- | --- |
@@ -19,6 +19,10 @@
 | 동시 재전송·유실 응답·Busy 재전송·용량 제한·연결 독립 수명 | [ADR-0012](adr/0012-start-request-replay.md) | IpcTests의 M4-002~004, 009~011, 014 |
 | Client의 버전·RequestId 검증과 실패한 연결 폐기 | [ADR-0011](adr/0011-named-pipe-protocol.md) | [ClientProtocolTests](../tests/Inspection.IntegrationTests/ClientProtocolTests.cs), M4-016: 2개 |
 | 과거 JSON 읽기·파일 부재·저장 식별자 검증 | [ADR-0011](adr/0011-named-pipe-protocol.md) | [JsonResultStoreTests](../tests/Inspection.IntegrationTests/JsonResultStoreTests.cs), M4-017~019: 3개 |
+| 조회 조건 검증·UTC 정규화·정확한 JobId | [ADR-0013](adr/0013-sqlite-results-and-query.md) | [ResultQueryTests](../tests/Inspection.Tests/ResultQueryTests.cs), M5-001~002: 7개 |
+| 진단 예외 격리·잠금 밖 호출·완료/해제 순서·자동 RunId | [ADR-0014](adr/0014-structured-diagnostics.md) | [DiagnosticTests](../tests/Inspection.Tests/DiagnosticTests.cs), M5-003~005: 4개 |
+| 실제 SQLite commit·롤백·중복·잠금·검색·커서·스키마 | [ADR-0013](adr/0013-sqlite-results-and-query.md) | [SqliteResultStoreTests](../tests/Inspection.IntegrationTests/SqliteResultStoreTests.cs), M5-006~014: 11개 |
+| 두 검사기의 자동 저장·Host 재시작·오류 로그·유실 응답·조회 오류 | [ADR-0013](adr/0013-sqlite-results-and-query.md), [ADR-0014](adr/0014-structured-diagnostics.md) | [StorageDiagnosticsTests](../tests/Inspection.IntegrationTests/StorageDiagnosticsTests.cs), M5-015~023: 13개 |
 
 verify.ps1은 전체 실행 수·실패·skip 검사에 더해 `check-required-tests.ps1`로 각 필수 클래스·메서드·데이터 사례가 정확히 한 번 실행되어 Passed인지 확인한다. 다른 테스트가 늘어나 전체 수를 채워도 필수 사례 누락은 실패한다. 추가 테스트는 허용한다. TRX의 매 실행 UUID는 기준으로 사용하지 않는다.
 

@@ -1,6 +1,6 @@
 @startuml architecture
 !pragma layout smetana
-title M4 runtime responsibilities (Host and Client processes)
+title M5 runtime responsibilities (Host and Client processes)
 skinparam componentStyle rectangle
 component "Host\ncreates dependencies" as Host
 component "Client process\nContracts DTO only" as Client
@@ -11,13 +11,17 @@ component "SimulatedDevice\noptional Host acquisition delay" as Device
 component "Infrastructure\nRangeInspector" as Inspector
 component "Interop\nNativeInspector" as Native
 component "NativeInspection.dll\nC ABI / worker and progress callbacks" as DLL
-component "Infrastructure\nJsonResultStore" as Store
-database "RunId.json" as Result
+component "Infrastructure\nJSON / SQLite result store" as Store
+database "JSON files / SQLite DB" as Result
+component "Host\nJSONL diagnostics\nclosed after engine and adapters" as Log
 Host --> Engine : Start / StartAuto / GetStatus / StopAuto / CancelRun
 Client <--> Server
 Host --> Server : owns / stops connections before engine disposal
 Server --> Engine : short admission and control calls
 Server --> Store
+Server --> Log
+Engine --> Log : IInspectionDiagnostics
+Host ..> Log
 Engine --> Core : one admitted run / shared persistence boundary / sequential repetition
 Host ..> Engine : await DisposeAsync before adapter disposal
 Core --> Device : IDevice

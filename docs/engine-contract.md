@@ -59,4 +59,6 @@ if (start.Run is { } run)
 }
 ```
 
+IInspectionDiagnostics는 실행 시작·각 단계·최종 스냅샷을 잠금 밖에서 관찰한다. 최종 관찰 호출은 작업/콜백/타이머 정리 후 완료 게시 전에 끝나며 그동안 Busy를 유지한다. 관찰 예외는 결과를 바꾸지 않는다. 관찰자는 자신의 Completion을 기다리지 않고 신속히 반환해야 한다. Host는 Engine 종료 후 진단 sink를 해제한다. [ADR-0014](adr/0014-structured-diagnostics.md)를 따른다.
+
 Completion은 실행의 실패·취소도 스냅샷으로 반환한다. 기존 Runner.RunAsync 직접 호출은 예외 기반 계약을 유지한다. Host는 CLI 한 건 또는 유한 자동 반복을 제공한다. M4의 [IPC 계약](ipc-contract.md)이 다른 프로세스의 조회·취소와 Host의 수동 실행·세션 상태 보존을 제공한다. Core 자체의 조회 범위는 그대로다.

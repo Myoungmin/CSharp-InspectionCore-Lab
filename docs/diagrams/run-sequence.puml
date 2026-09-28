@@ -1,5 +1,5 @@
 @startuml run-sequence
-title M5 one successful run (manual or admitted by auto session)
+title M6 one successful run (manual or admitted by auto session)
 actor User
 participant Host
 participant InspectionEngine as Engine
@@ -19,7 +19,7 @@ Device --> Runner : ready
 Runner -> Device : AcquireAsync(job, token)
 Device --> Runner : samples
 Runner -> Inspector : InspectAsync(job, samples, token)
-opt native inspector selected
+opt native or cli inspector selected
 Inspector -> DLL : Start(handle, samples, count, callback, rooted context)
 DLL --> Inspector : input copied / worker started
 Inspector -> DLL : Wait(handle)
@@ -44,7 +44,7 @@ Engine -> Engine : Succeeded / release slot / complete handle
 Engine --> Host : await handle.Completion
 Host --> User : Succeeded + RunId + verdict + result path
 Host -> Engine : await DisposeAsync()
-opt native inspector selected
+opt native or cli inspector selected
 Host -> Inspector : await DisposeAsync()
 Inspector -> DLL : inspection_destroy(handle) via SafeHandle
 end

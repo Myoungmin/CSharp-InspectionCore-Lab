@@ -10,6 +10,7 @@ public sealed class NativeInspector : IInspector, IDisposable, IAsyncDisposable
 {
     [ThreadStatic] private static NativeInspector? _callbackOwner;
     private readonly object _gate = new();
+    private readonly INativeInspectionApi _api;
     private readonly NativeInspectorHandle _handle;
     private readonly Action<NativeInspectionProgress>? _progress;
     private Operation? _active;
@@ -17,16 +18,18 @@ public sealed class NativeInspector : IInspector, IDisposable, IAsyncDisposable
     private bool _disposed;
     private Task? _disposeTask;
 
-    internal ulong ProgressCallbackCount => NativeMethods.ProgressCallbacks(_handle);
+    public ulong ProgressCallbackCount => _api.ProgressCallbacks(_handle);
 
-    public NativeInspector(NativeFaultMode faultMode = NativeFaultMode.None, Action<NativeInspectionProgress>? progress = null)
+    public NativeInspector(NativeFaultMode faultMode = NativeFaultMode.None, Action<NativeInspectionProgress>? progress = null,
+        INativeInspectionApi? api = null)
     {
         if (!Enum.IsDefined(faultMode)) { throw new ArgumentOutOfRangeException(nameof(faultMode)); }
-        if (NativeMethods.AbiVersion() != 2 || NativeMethods.ResultSize() != Marshal.SizeOf<NativeInspectionResult>())
+        _api = api ?? PInvokeInspectionApi.Instance;
+        if (_api.AbiVersion() != 2 || _api.ResultSize() != Marshal.SizeOf<NativeInspectionResult>())
         {
             throw new InvalidOperationException("Unsupported NativeInspection ABI or result layout.");
         }
-        NativeStatus status = NativeMethods.Create(faultMode, out NativeInspectorHandle handle);
+        NativeStatus status = _api.Create(faultMode, out NativeInspectorHandle handle);
         if (status != NativeStatus.Ok || handle.IsInvalid)
         {
             handle.Dispose();
@@ -109,7 +112,7 @@ public sealed class NativeInspector : IInspector, IDisposable, IAsyncDisposable
         {
             try
             {
-                NativeStatus status = NativeMethods.RequestStop(owner._handle);
+                NativeStatus status = owner._api.RequestStop(owner._handle);
                 if (status != NativeStatus.Ok) { _stopError = new NativeInspectionException("RequestStop", status); }
             }
             catch (Exception exception) { _stopError = exception; }
@@ -146,19 +149,16 @@ public sealed class NativeInspector : IInspector, IDisposable, IAsyncDisposable
                 lock (_gate)
                 {
                     if (_stopRequested) { throw new OperationCanceledException(token); }
-                    fixed (double* pointer = samples)
-                    {
-                        NativeStatus status = NativeMethods.Start(owner._handle, pointer, samples.Length,
-                            job.LowerBound, job.UpperBound, &OnProgress, GCHandle.ToIntPtr(context));
-                        if (status != NativeStatus.Ok) { throw new NativeInspectionException("Inspect", status); }
-                    }
+                    NativeStatus status = owner._api.Start(owner._handle, samples,
+                        job.LowerBound, job.UpperBound, (nint)(delegate* unmanaged[Cdecl]<nint, int, int, void>)&OnProgress, GCHandle.ToIntPtr(context));
+                    if (status != NativeStatus.Ok) { throw new NativeInspectionException("Inspect", status); }
                     _started = true;
                 }
                 // Nothing may skip join after a successful Start.
                 NativeStatus waitStatus;
                 NativeStatus operationStatus;
                 NativeInspectionResult result;
-                try { waitStatus = NativeMethods.Wait(owner._handle, out operationStatus, out result); }
+                try { waitStatus = owner._api.Wait(owner._handle, out operationStatus, out result); }
                 catch (Exception exception) { RequestStop(); throw new InspectionTerminationException(false, exception); }
                 if (waitStatus != NativeStatus.Ok)
                 {

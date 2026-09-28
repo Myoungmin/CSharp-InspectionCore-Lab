@@ -1,0 +1,36 @@
+@startuml cpp-cli-comparison
+!pragma layout smetana
+title M6: two ABI transports, one managed lifetime policy
+hide empty members
+class "Host\nselects and owns adapter" as Host
+interface "Core.IInspector" as Port {
+  InspectAsync
+}
+class "C++/CLI CliInspector\nimplements IInspector" as Cli
+class "Interop.NativeInspector\nshared managed operation lifetime" as Lifetime
+interface "Interop.INativeInspectionApi" as Api {
+  Create / Start / RequestStop / Wait
+}
+class "C# PInvokeInspectionApi\nLibraryImport / fixed" as PInvoke
+class "C++/CLI CliNativeApi\npin_ptr / unmanaged thunk" as Transport
+class "NativeInspection.dll\nC ABI 2 / same worker" as DLL
+Host --> Port
+Cli ..|> Port
+Lifetime ..|> Port
+Cli --> Lifetime : owns / delegates execution and disposal
+Lifetime --> Api
+PInvoke ..|> Api
+Transport ..|> Api
+PInvoke --> DLL
+Transport --> DLL
+note bottom of Lifetime
+Task, cancellation, callback root and SafeHandle lease.
+Successful Wait precedes release.
+Unconfirmed Wait retains context and lease until process exit.
+end note
+note bottom of DLL
+Start copies input.
+Wait joins work and callbacks.
+Destroy only after confirmed join.
+end note
+@enduml

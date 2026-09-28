@@ -1,23 +1,24 @@
 # CSharp InspectionCore Lab
 
-가상 검사 장비로 C# Non-UI Core를 실습하는 프로젝트다. 현재 구현 범위는 **M5: C#/C++ 검사와 수동·자동 실행, Named Pipe 제어, JSON/SQLite 저장·검색, 구조화 진단과 장애 주입**이다.
+가상 검사 장비로 C# Non-UI Core를 실습하는 프로젝트다. 현재 구현 범위는 **M6: C#/LibraryImport/C++/CLI 검사기 교체, 수동·자동 실행, Named Pipe 제어, JSON/SQLite 저장·검색과 구조화 진단**이다.
 
 ## 실행
 
-Windows x64, .NET SDK **9.0.305**, VS 2022 17.14를 기준으로 한다. C++ x64 빌드 도구 **MSVC 14.44.35207 / v143**과 Windows SDK **10.0.26100.0**이 필요하다. 솔루션은 `InspectionLab.sln`이며 Visual Studio에서 x64로 빌드할 수 있다.
+Windows x64, .NET SDK **9.0.305**, VS 2022 17.14를 기준으로 한다. C++ x64 빌드 도구 **MSVC 14.44.35207 / v143**과 Windows SDK **10.0.26100.0**과 **v143 C++/CLI 지원** 구성 요소가 필요하다. 솔루션은 `InspectionLab.sln`이며 Visual Studio에서 x64로 빌드할 수 있다.
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-native.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-cppcli.ps1
 dotnet restore src/Inspection.Host/Inspection.Host.csproj --locked-mode
 dotnet run --project src/Inspection.Host --configuration Release --no-restore -- --scenario pass --inspector managed
 dotnet run --project src/Inspection.Host --configuration Release --no-restore -- --scenario fail --inspector native
+dotnet run --project src/Inspection.Host --configuration Release --no-restore -- --scenario fail --inspector cli
 dotnet run --project src/Inspection.Host --configuration Release --no-restore -- --inspector native --timeout-ms 0
 dotnet run --project src/Inspection.Host --configuration Release --no-restore -- --inspector native --scenario fail --repeat 3 --interval-ms 1000
 ```
 
-기본 JSON 모드의 각 실행은 새 RunId를 발급하고 `artifacts/results/<RunId>.json`에 결과를 저장한다. `--output`으로 저장 폴더를 지정할 수 있다. 경로에 공백이 있으면 따옴표로 감싼다. 검사기의 기본값은 기존과 같은 `managed`다. `native`를 선택했을 때 DLL이 없으면 실패하며 자동 대체하지 않는다.
+기본 JSON 모드의 각 실행은 새 RunId를 발급하고 `artifacts/results/<RunId>.json`에 결과를 저장한다. `--output`으로 저장 폴더를 지정할 수 있다. 경로에 공백이 있으면 따옴표로 감싼다. 검사기의 기본값은 기존과 같은 `managed`다. `native`는 LibraryImport, `cli`는 C++/CLI로 같은 Native DLL을 호출한다. 선택한 검사기의 DLL이 없으면 실패하며 자동 대체하지 않는다.
 
-혼합 솔루션의 `.vcxproj`는 Visual Studio MSBuild가 담당한다. CLI에서는 위 순서나 verify.ps1을 사용한다. `dotnet build InspectionLab.sln`은 사용하지 않는다. Debug 실행은 먼저 `build-native.ps1 -Configuration Debug`로 해당 DLL을 빌드한다. 빌드된 Native DLL은 Host·통합 테스트·publish 출력으로 복사된다.
+Native와 C++/CLI의 `.vcxproj`는 Visual Studio MSBuild가 담당한다. build-cppcli.ps1이 Native → Core/Interop → 혼합 DLL 순서를 처리하며 이후 Host를 dotnet으로 빌드한다. CLI에서는 위 순서나 verify.ps1을 사용한다. `dotnet build InspectionLab.sln`은 사용하지 않는다. Debug 실행은 먼저 `build-cppcli.ps1 -Configuration Debug`로 해당 DLL을 빌드한다. NativeInspection.dll·Inspection.CppCli.dll·ijwhost.dll은 Host·통합 테스트·publish 출력으로 복사된다. [C++/CLI 비교](docs/cpp-cli-comparison.md)에 수명 공유와 배포 범위를 설명한다.
 
 | 시나리오 | 입력 | 허용 범위 | 결과 |
 |---|---|---|---|
@@ -62,7 +63,7 @@ $env:PLANTUML_JAR = 'C:\tools\plantuml.jar'
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify.ps1
 ```
 
-검증 스크립트는 Native 빌드 → 관리 프로젝트의 잠금 파일 restore·Release 빌드 → Core 단위 테스트 → Native·파일·IPC 통합 테스트 → 두 검사기의 기존 CLI·JSON → 의존성·문서를 검사한다. 필수 테스트는 Core 94개와 통합 87개(기존 Native·JSON·IPC 63 + SQLite 11 + 저장·진단 프로세스 13), 총 181개다. 기존 IPC 중 21개는 실제 Host 프로세스이며 그중 4개는 별도 Client 실행 파일도 사용한다. 전체 수와 함께 필수 클래스·메서드·데이터 사례를 확인한다. DLL 해시·누락·저장 실패·인수·타임아웃·자동 반복 검증도 유지한다. ADR 14건·다이어그램 10개·상대 링크를 검사한다. 누락·skip·결과 파일 누락·검증 중 소스 변경은 실패다. 상세 결과는 `artifacts/verification/<id>/summary.json`, TRX와 로그에 남고 IPC 프로세스 로그는 `artifacts/ipc-tests`에 남는다.
+검증 스크립트는 Native·C++/CLI 선행 빌드 → 관리 프로젝트의 잠금 파일 restore·Release 빌드 → Core 단위 테스트 → Native·파일·IPC 통합 테스트 → 세 검사기의 CLI·JSON → 의존성·문서를 검사한다. 필수 테스트는 Core 94개와 통합 123개(기존 87 + C++/CLI 34 + cli 저장 프로세스 2), 총 217개다. 기존 IPC 중 21개는 실제 Host 프로세스이며 그중 4개는 별도 Client 실행 파일도 사용한다. 전체 수와 함께 필수 클래스·메서드·데이터 사례를 확인한다. 세 검사기의 DLL 해시·누락·저장 실패·인수·타임아웃·자동 반복과 publish 실행을 검사한다. ADR 16건·다이어그램 11개·상대 링크를 검사한다. 누락·skip·결과 파일 누락·검증 중 소스 변경은 실패다. 상세 결과는 `artifacts/verification/<id>/summary.json`, TRX와 로그에 남고 IPC 프로세스 로그는 `artifacts/ipc-tests`에 남는다.
 
 ## 구조와 다음 단계
 
@@ -90,10 +91,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify.ps1
 - [저장·진단 사용법](docs/storage-diagnostics.md)
 - [M5 작업·인수 조건](tasks/M05-storage-diagnostics.md)
 - [M5 실습 기록](docs/practice-M05.md)
+- [C++/CLI 비교·빌드·배포](docs/cpp-cli-comparison.md)
+- [M6 작업·인수 조건](tasks/M06-cpp-cli-comparison.md)
+- [M6 실습 기록](docs/practice-M06.md)
 - [장애 대응](docs/troubleshooting.md)
 - [문서 유지 규칙](docs/documentation-rules.md)
 - [전체 단계와 Codex 루프 설계](InspectionLab-Architecture-and-Codex-Loop.md)
 
-다음 단계는 M6의 C++/CLI 어댑터 비교다. Native Wait 실패로 종료를 확인하지 못하면 자원을 보존하고 같은 엔진의 재접수를 거절하며 복구는 Host 재시작으로 수행한다. IPC의 시작 재전송 보장은 Host 수명 안으로 한정한다. C++/CLI, Codex 자동 반복 제어기, .NET 10 전환은 후속 작업이다.
+M0~M6의 구현 단계는 완료했으며 후속 개발은 보류 목록에서 작업을 선택한다. 지원 종료 전 .NET 10 이전(B01)을 우선 재검토한다. Native Wait 실패로 종료를 확인하지 못하면 자원을 보존하고 같은 엔진의 재접수를 거절하며 복구는 Host 재시작으로 수행한다. IPC의 시작 재전송 보장은 Host 수명 안으로 한정한다. Codex 자동 반복 제어기, .NET 10 전환과 장기 운영의 보존·백업은 별도 작업이다.
 
 구조나 계약을 결정할 때는 ADR을 한 건씩 추가하고 구현·아키텍처·관련 다이어그램과 함께 갱신한다. 전체 설계 문서는 단계별 계획으로 계속 커밋하며, 현재 구조와 결정 이력은 각각 architecture.md와 ADR에서 관리한다.

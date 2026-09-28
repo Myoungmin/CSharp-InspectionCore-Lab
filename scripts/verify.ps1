@@ -11,7 +11,7 @@ $powershell = Join-Path $PSHOME 'powershell.exe'
 $verificationId = [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssZ') + '-' + [Guid]::NewGuid().ToString('N').Substring(0, 8)
 $outputDir = Join-Path $repoRoot "artifacts/verification/$verificationId"
 New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
-$summary = [ordered]@{ milestone = 'M5'; verificationId = $verificationId; status = 'Failed'; baselineCommit = $null; sourceHash = $null; nativeDllHash = $null; testsPassed = 0; integrationTestsPassed = 0; nativeTestsPassed = 0; ipcTestsPassed = 0; sqliteTestsPassed = 0; storageDiagnosticsTestsPassed = 0; smokeCases = @(); steps = @(); error = $null }
+$summary = [ordered]@{ milestone = 'M6'; verificationId = $verificationId; status = 'Failed'; baselineCommit = $null; sourceHash = $null; nativeDllHash = $null; cppCliDllHash = $null; ijwHostHash = $null; cppCliTestsPassed = 0; testsPassed = 0; integrationTestsPassed = 0; nativeTestsPassed = 0; ipcTestsPassed = 0; sqliteTestsPassed = 0; storageDiagnosticsTestsPassed = 0; smokeCases = @(); steps = @(); error = $null }
 
 function Get-SourceSnapshot {
     $paths = @(& git -C $repoRoot -c core.quotepath=false ls-files --cached --others --exclude-standard | Sort-Object -Unique)
@@ -45,9 +45,11 @@ try {
     $before = Get-SourceSnapshot
     $summary.sourceHash = $before.Hash
     [IO.File]::WriteAllText((Join-Path $outputDir 'source-manifest.json'), $before.Manifest, [Text.UTF8Encoding]::new($false))
-    $null = Invoke-Step 'build-native' $powershell @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $PSScriptRoot 'build-native.ps1'))
+    $null = Invoke-Step 'build-native-and-cppcli' $powershell @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $PSScriptRoot 'build-cppcli.ps1'))
     $nativeDll = Join-Path $repoRoot 'artifacts/native/Release/NativeInspection.dll'
     $summary.nativeDllHash = (Get-FileHash -LiteralPath $nativeDll -Algorithm SHA256).Hash
+    $summary.cppCliDllHash = (Get-FileHash -LiteralPath (Join-Path $repoRoot 'artifacts/cppcli/Release/Inspection.CppCli.dll') -Algorithm SHA256).Hash
+    $summary.ijwHostHash = (Get-FileHash -LiteralPath (Join-Path $repoRoot 'artifacts/cppcli/Release/ijwhost.dll') -Algorithm SHA256).Hash
     # dotnet MSBuild cannot build vcxproj. Build the managed entrypoints and their references explicitly.
     $managedEntrypoints = [ordered]@{
         'host' = 'src/Inspection.Host/Inspection.Host.csproj'
@@ -68,7 +70,7 @@ try {
     $testResults = @($trx.TestRun.Results.UnitTestResult)
     if ([int]$counters.total -lt 94 -or [int]$counters.executed -ne [int]$counters.total -or
         [int]$counters.passed -ne [int]$counters.total -or @($testResults | Where-Object { $_.outcome -ne 'Passed' }).Count -gt 0) {
-        throw 'M5 requires all 94 Core tests (83 existing plus 11 query/diagnostic cases), with no skipped or failed results.'
+        throw 'M6 retains all 94 Core tests, with no skipped or failed results.'
     }
     $summary.testsPassed = [int]$counters.passed
 
@@ -79,10 +81,10 @@ try {
     [xml]$integrationTrx = [IO.File]::ReadAllText($integrationTrxPath)
     $integrationCounters = $integrationTrx.TestRun.ResultSummary.Counters
     $integrationResults = @($integrationTrx.TestRun.Results.UnitTestResult)
-    if ([int]$integrationCounters.total -lt 87 -or [int]$integrationCounters.executed -ne [int]$integrationCounters.total -or
+    if ([int]$integrationCounters.total -lt 123 -or [int]$integrationCounters.executed -ne [int]$integrationCounters.total -or
         [int]$integrationCounters.passed -ne [int]$integrationCounters.total -or $integrationResults.Count -ne [int]$integrationCounters.total -or
         @($integrationResults | Where-Object { $_.outcome -ne 'Passed' }).Count -gt 0) {
-        throw 'M5 requires at least 87 integration tests (63 existing, 11 SQLite, 13 storage/diagnostic process cases); skip is not permitted.'
+        throw 'M6 requires 123 integration tests (87 existing, 34 C++/CLI, 2 additional storage processes); skip is not permitted.'
     }
     $nativeTestIds = @($integrationTrx.TestRun.TestDefinitions.UnitTest | Where-Object { $_.TestMethod.className -in @('Inspection.IntegrationTests.NativeInspectorTests', 'Inspection.IntegrationTests.NativeLifetimeTests', 'Inspection.IntegrationTests.NativeAutoTests') } | ForEach-Object { $_.id })
     $nativeResults = @($integrationResults | Where-Object { $_.testId -in $nativeTestIds })
@@ -93,7 +95,11 @@ try {
     $ipcResults = @($integrationResults | Where-Object { $_.testId -in $ipcTestIds })
     if ($ipcResults.Count -lt 23) { throw 'The 23 mandatory IPC test cases were not executed.' }
     $summary.ipcTestsPassed = $ipcResults.Count
-    foreach ($requiredSuite in @(@{ Class = 'SqliteResultStoreTests'; Count = 11; Field = 'sqliteTestsPassed' }, @{ Class = 'StorageDiagnosticsTests'; Count = 13; Field = 'storageDiagnosticsTestsPassed' })) {
+    $cliIds = @($integrationTrx.TestRun.TestDefinitions.UnitTest | Where-Object { $_.TestMethod.className -in @('Inspection.IntegrationTests.CliInspectorTests', 'Inspection.IntegrationTests.CliLifetimeTests', 'Inspection.IntegrationTests.CliAutoTests', 'Inspection.IntegrationTests.CliProcessTests') } | ForEach-Object { $_.id })
+    $cliResults = @($integrationResults | Where-Object { $_.testId -in $cliIds })
+    if ($cliResults.Count -lt 34) { throw 'All 34 C++/CLI integration cases are mandatory.' }
+    $summary.cppCliTestsPassed = $cliResults.Count
+    foreach ($requiredSuite in @(@{ Class = 'SqliteResultStoreTests'; Count = 11; Field = 'sqliteTestsPassed' }, @{ Class = 'StorageDiagnosticsTests'; Count = 15; Field = 'storageDiagnosticsTestsPassed' })) {
         $suiteIds = @($integrationTrx.TestRun.TestDefinitions.UnitTest | Where-Object { $_.TestMethod.className -ceq ('Inspection.IntegrationTests.' + $requiredSuite.Class) } | ForEach-Object { $_.id })
         $suiteResults = @($integrationResults | Where-Object { $_.testId -in $suiteIds })
         if ($suiteResults.Count -lt $requiredSuite.Count) { throw "Missing mandatory cases: $($requiredSuite.Class)" }
@@ -105,15 +111,20 @@ try {
     }
 
     $hostDll = Join-Path $repoRoot 'src/Inspection.Host/bin/Release/net9.0/Inspection.Host.dll'
+    foreach ($directory in @('src/Inspection.Host/bin/Release/net9.0', 'tests/Inspection.IntegrationTests/bin/Release/net9.0')) {
+        foreach ($entry in @(@{ Name = 'Inspection.CppCli.dll'; Hash = $summary.cppCliDllHash }, @{ Name = 'ijwhost.dll'; Hash = $summary.ijwHostHash })) {
+            if ((Get-FileHash -LiteralPath (Join-Path $repoRoot "$directory/$($entry.Name)") -Algorithm SHA256).Hash -ne $entry.Hash) { throw "Stale C++/CLI dependency: $directory/$($entry.Name)" }
+        }
+    }
     $resultDir = Join-Path $outputDir 'results with spaces'
     $seenIds = @()
-    foreach ($inspector in @('managed', 'native')) {
+    foreach ($inspector in @('managed', 'native', 'cli')) {
       foreach ($scenario in @('pass', 'fail', 'pass')) {
         $index = $seenIds.Count
         $hostResult = Invoke-Step "host-$index-$inspector-$scenario" $dotnet @($hostDll, '--scenario', $scenario, '--inspector', $inspector, '--output', $resultDir) -TimeoutSeconds 30
         $runMatch = [regex]::Match($hostResult.Stdout, 'RunId=([0-9a-fA-F-]{36})')
         if (-not $runMatch.Success -or $hostResult.Stdout -notmatch 'Status=Succeeded' -or $hostResult.Stdout -notmatch "Inspector=$inspector") { throw 'Host did not report a successful run with RunId and the selected inspector.' }
-        if ($inspector -eq 'native') {
+        if ($inspector -in @('native', 'cli')) {
             $progressMatches = @([regex]::Matches($hostResult.Stdout, '(?m)^NativeProgress=(\d+)/4\r?$'))
             $progress = @($progressMatches | ForEach-Object { $_.Groups[1].Value })
             if (($progress -join ',') -cne '0,1,2,3,4' -or $progressMatches[-1].Index -gt $runMatch.Index) {
@@ -138,13 +149,13 @@ try {
         $summary.smokeCases += [ordered]@{ inspector = $inspector; scenario = $scenario; runId = $runId.ToString(); verdict = $expectedVerdict; score = $expectedScore }
       }
     }
-    if (@(Get-ChildItem -LiteralPath $resultDir -Filter '*.json').Count -ne 6 -or @(Get-ChildItem -LiteralPath $resultDir -Filter '*.tmp').Count -ne 0) {
+    if (@(Get-ChildItem -LiteralPath $resultDir -Filter '*.json').Count -ne 9 -or @(Get-ChildItem -LiteralPath $resultDir -Filter '*.tmp').Count -ne 0) {
         throw 'Unexpected result count or unfinished temporary files.'
     }
 
     $blockedPath = Join-Path $outputDir 'not-a-directory'
     $seenAutoIds = @()
-    foreach ($inspector in @('managed', 'native')) {
+    foreach ($inspector in @('managed', 'native', 'cli')) {
       foreach ($scenario in @('pass', 'fail')) {
         $autoDir = Join-Path $outputDir "auto $inspector $scenario"
         $autoResult = Invoke-Step "host-auto-$inspector-$scenario" $dotnet @($hostDll, '--inspector', $inspector, '--scenario', $scenario, '--repeat', '3', '--interval-ms', '0', '--output', $autoDir) -TimeoutSeconds 30
@@ -172,7 +183,7 @@ try {
         }
         $lastRun = [regex]::Match($autoResult.Stdout, 'RunId=([0-9a-fA-F-]{36}) JobId=demo-\w+ Status=Succeeded')
         if (-not $lastRun.Success -or $lastRun.Groups[1].Value -notin $autoRunIds) { throw 'Auto Host must report its last persisted run.' }
-        if ($inspector -eq 'native' -and @([regex]::Matches($autoResult.Stdout, '(?m)^NativeProgress=4/4\r?$')).Count -ne 3) { throw 'Each native auto run must finish its progress callbacks.' }
+        if ($inspector -in @('native', 'cli') -and @([regex]::Matches($autoResult.Stdout, '(?m)^NativeProgress=4/4\r?$')).Count -ne 3) { throw 'Each native auto run must finish its progress callbacks.' }
         $summary.smokeCases += [ordered]@{ inspector = $inspector; scenario = $scenario; autoId = $autoId.ToString(); runIds = $autoRunIds; count = 3 }
       }
     }
@@ -194,7 +205,7 @@ try {
     if ($logFailure.Stderr -notmatch 'Status=Faulted Stage=Setup' -or (Test-Path -LiteralPath $logFailureOutput)) { throw 'Log setup failure must be visible before running a job.' }
     $autoStorageFailure = Invoke-Step 'host-auto-storage-failure' $dotnet @($hostDll, '--repeat', '3', '--interval-ms', '0', '--output', $blockedPath) -ExpectedExitCode 1 -TimeoutSeconds 30
     if ($autoStorageFailure.Stdout -notmatch 'State=Faulted Reason=RunFaulted StartedRuns=1 CompletedRuns=1' -or $autoStorageFailure.Stderr -notmatch 'Stage=Persist ComputedScore=100\.00') { throw 'Storage failure must stop auto after one run.' }
-    foreach ($inspector in @('managed', 'native')) {
+    foreach ($inspector in @('managed', 'native', 'cli')) {
         $timeoutDir = Join-Path $outputDir "timeout-$inspector"
         $timedOut = Invoke-Step "host-timeout-$inspector" $dotnet @($hostDll, '--inspector', $inspector, '--timeout-ms', '0', '--output', $timeoutDir) -ExpectedExitCode 124 -TimeoutSeconds 30
         if ($timedOut.Stderr -notmatch 'RunId=[0-9a-fA-F-]{36} Status=TimedOut Stage=Prepare Reason=Timeout' -or $timedOut.Stdout -match 'Succeeded' -or (Test-Path -LiteralPath $timeoutDir)) {
@@ -210,6 +221,21 @@ try {
     if ($missingDll.Stderr -notmatch 'Status=Faulted Stage=Setup' -or $missingDll.Stdout -match 'Succeeded' -or (Test-Path -LiteralPath (Join-Path $missingDllDir 'results'))) {
         throw 'A missing native DLL must fail setup without falling back to the managed inspector or producing results.'
     }
+    foreach ($missing in @('Inspection.CppCli.dll', 'ijwhost.dll', 'NativeInspection.dll')) {
+        $directory = Join-Path $outputDir ("missing-cli-" + $missing)
+        New-Item -ItemType Directory -Path $directory | Out-Null
+        Get-ChildItem -LiteralPath (Split-Path -Parent $hostDll) -File | Where-Object { $_.Name -ne $missing } | Copy-Item -Destination $directory
+        $result = Invoke-Step ("cli-missing-" + $missing) $dotnet @((Join-Path $directory 'Inspection.Host.dll'), '--inspector', 'cli', '--output', (Join-Path $directory 'results')) -ExpectedExitCode 1 -TimeoutSeconds 30
+        if ($result.Stderr -notmatch 'Status=Faulted Stage=Setup' -or (Test-Path -LiteralPath (Join-Path $directory 'results'))) { throw "Missing $missing must fail CLI setup without substitution." }
+    }
+    $publishDir = Join-Path $outputDir 'published host'
+    $null = Invoke-Step 'publish-host' $dotnet @('publish', 'src/Inspection.Host/Inspection.Host.csproj', '-c', 'Release', '--no-build', '--no-restore', '-o', $publishDir)
+    foreach ($entry in @(@{ Name = 'Inspection.CppCli.dll'; Hash = $summary.cppCliDllHash }, @{ Name = 'ijwhost.dll'; Hash = $summary.ijwHostHash }, @{ Name = 'NativeInspection.dll'; Hash = $summary.nativeDllHash })) {
+        if ((Get-FileHash -LiteralPath (Join-Path $publishDir $entry.Name) -Algorithm SHA256).Hash -ne $entry.Hash) { throw 'Published DLL hash mismatch.' }
+    }
+    $publishedResults = Join-Path $publishDir 'results'
+    $published = Invoke-Step 'published-cli-run' $dotnet @((Join-Path $publishDir 'Inspection.Host.dll'), '--inspector', 'cli', '--scenario', 'fail', '--output', $publishedResults) -TimeoutSeconds 30
+    if ($published.Stdout -notmatch 'Status=Succeeded Verdict=Fail' -or @(Get-ChildItem -LiteralPath $publishedResults -Filter '*.json').Count -ne 1) { throw 'Published C++/CLI Host must persist product Fail successfully.' }
     $null = Invoke-Step 'architecture' $powershell @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $PSScriptRoot 'check-architecture.ps1'))
     $null = Invoke-Step 'documentation' $powershell @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $PSScriptRoot 'build-docs.ps1'))
     $after = Get-SourceSnapshot

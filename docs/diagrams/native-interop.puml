@@ -1,6 +1,6 @@
 @startuml native-interop
 !pragma layout smetana
-title M3b native worker, callback context and ownership
+title M6 shared native worker, callback context and ownership
 interface IInspector
 class NativeInspector {
   InspectAsync(job, samples, token)
@@ -14,8 +14,9 @@ class Operation {
 class NativeInspectorHandle {
   SafeHandle / ReleaseHandle()
 }
-class NativeMethods {
-  LibraryImport declarations
+interface INativeInspectionApi {
+  PInvokeInspectionApi or CliNativeApi
+  Start / RequestStop / Wait
 }
 class "inspection_handle (C++)" as NativeObject {
   copied vector
@@ -25,10 +26,10 @@ class "inspection_handle (C++)" as NativeObject {
 NativeInspector ..|> IInspector
 NativeInspector *-- NativeInspectorHandle : owns
 NativeInspector *-- Operation : at most one active
-Operation --> NativeMethods : Start / RequestStop / Wait
+Operation --> INativeInspectionApi : Start / RequestStop / Wait
 Operation --> NativeInspectorHandle : extra reference until confirmed join
-NativeInspectorHandle --> NativeMethods : Destroy (rejects unjoined worker)
-NativeMethods ..> NativeObject : C ABI v2
+NativeInspectorHandle ..> NativeObject : Destroy through selected release function
+INativeInspectionApi ..> NativeObject : C ABI v2
 NativeObject ..> Operation : static callback / rooted context
 note right of Operation
 Start copies pinned input before returning.

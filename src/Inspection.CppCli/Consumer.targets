@@ -1,0 +1,17 @@
+<Project>
+  <!-- File references keep vcxproj out of dotnet's project graph. The solution/script builds it first. -->
+  <PropertyGroup>
+    <InspectionCppCliOutput>$(MSBuildThisFileDirectory)..\..\artifacts\cppcli\$(Configuration)\</InspectionCppCliOutput>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Inspection.CppCli">
+      <HintPath>$(InspectionCppCliOutput)Inspection.CppCli.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Content Include="$(InspectionCppCliOutput)ijwhost.dll" Link="ijwhost.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+  <Target Name="RequireInspectionCppCli" BeforeTargets="PrepareForBuild">
+    <Error Condition="!Exists('$(InspectionCppCliOutput)Inspection.CppCli.dll') Or !Exists('$(InspectionCppCliOutput)ijwhost.dll')"
+           Text="C++/CLI outputs are missing. Run scripts/build-cppcli.ps1 -Configuration $(Configuration) first." />
+  </Target>
+</Project>

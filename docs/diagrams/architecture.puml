@@ -1,7 +1,8 @@
 @startuml architecture
 !pragma layout smetana
-title M5 runtime responsibilities (Host and Client processes)
+title M6 runtime responsibilities (Host and Client processes)
 skinparam componentStyle rectangle
+footer Shutdown: connections, engine, adapters, then diagnostics
 component "Host\ncreates dependencies" as Host
 component "Client process\nContracts DTO only" as Client
 component "Host\nNamed Pipe / Dispatcher" as Server
@@ -10,25 +11,28 @@ component "Core\nInspectionRunner" as Core
 component "SimulatedDevice\noptional Host acquisition delay" as Device
 component "Infrastructure\nRangeInspector" as Inspector
 component "Interop\nNativeInspector" as Native
+component "C++/CLI\nCliInspector / CliNativeApi" as Cli
 component "NativeInspection.dll\nC ABI / worker and progress callbacks" as DLL
 component "Infrastructure\nJSON / SQLite result store" as Store
 database "JSON files / SQLite DB" as Result
-component "Host\nJSONL diagnostics\nclosed after engine and adapters" as Log
-Host --> Engine : Start / StartAuto / GetStatus / StopAuto / CancelRun
+component "Host\nJSONL diagnostics\nclosed last" as Log
+Host --> Engine : start / status / stop
 Client <--> Server
-Host --> Server : owns / stops connections before engine disposal
+Host --> Server : owns connections
 Server --> Engine : short admission and control calls
 Server --> Store
 Server --> Log
 Engine --> Log : IInspectionDiagnostics
 Host ..> Log
-Engine --> Core : one admitted run / shared persistence boundary / sequential repetition
-Host ..> Engine : await DisposeAsync before adapter disposal
+Engine --> Core : one run / sequential repetition
+Host ..> Engine : awaits disposal before adapters
 Core --> Device : IDevice
 Core --> Inspector : IInspector (managed)
 Core --> Native : IInspector (native)
-Native --> DLL : Start / RequestStop / Wait / SafeHandle
-Host ..> Native : owns / await DisposeAsync
+Core --> Cli : IInspector (cli)
+Cli --> Native : owns shared lifetime
+Cli --> DLL : C++ direct calls
+Native --> DLL : LibraryImport (default transport)
 Core --> Store : IResultStore
 Store --> Result
 note bottom of Core

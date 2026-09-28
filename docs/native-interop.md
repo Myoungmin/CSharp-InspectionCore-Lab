@@ -1,6 +1,8 @@
-# M3b Native ABI와 소유권
+# M6 Native ABI와 소유권
 
-NativeInspector는 Core IInspector를 구현한다. 가상 검사 규칙은 RangeInspector와 같으며 P/Invoke 선언과 Native 오류·수명 관리는 Inspection.Interop에 둔다. [ADR-0008](adr/0008-native-async-lifetime.md)이 M2 동기 수명을 대체하고 [ADR-0009](adr/0009-termination-failure-quarantine.md)가 종료 실패를 정의한다.
+NativeInspector와 C++/CLI CliInspector는 Core IInspector를 구현한다. 가상 검사 규칙은 RangeInspector와 같으며 P/Invoke 선언과 Native 오류·수명 관리는 Inspection.Interop에 둔다. [ADR-0008](adr/0008-native-async-lifetime.md)이 M2 동기 수명을 대체하고 [ADR-0009](adr/0009-termination-failure-quarantine.md)가 종료 실패를 정의한다.
+
+M6의 [ADR-0015](adr/0015-cpp-cli-transport-and-shared-lifetime.md)는 NativeInspector의 관리 수명 코드에 INativeInspectionApi를 주입한다. 기본 LibraryImport 또는 C++/CLI 직접 호출을 선택하며 아래의 ABI·소유권·종료 규칙은 두 경로가 공유한다.
 
 ![Native ownership](diagrams/generated/native-interop.svg)
 
@@ -45,9 +47,9 @@ NativeFaultMode의 Create/Inspect/Stop/Wait 실패는 가상 DLL의 실제 예�
 
 ## 빌드와 검증
 
-Native는 VS MSBuild, v143/14.44.35207, Windows SDK 10.0.26100.0과 정적 CRT를 사용한다. 관리 프로젝트는 .NET SDK 9.0.305/net9.0/x64로 빌드한다. 전체 검증은 Native 빌드 후 dotnet build/test 순서다.
+Native는 VS MSBuild, v143/14.44.35207, Windows SDK 10.0.26100.0과 정적 CRT를 사용한다. 관리 프로젝트는 .NET SDK 9.0.305/net9.0/x64로 빌드한다. C++/CLI는 동적 CRT를 사용한다. 전체 검증은 Native → Core/Interop → C++/CLI 빌드 후 Host/테스트의 dotnet build/test 순서다. [빌드·배포 결정](adr/0016-cpp-cli-build-and-deployment.md)을 따른다.
 
-실제 DLL 테스트 34개는 기존 20개, 비동기 수명 12개와 M3c 자동 예약 중지·현재 실행 취소 2개다. Core 종료 실패 8개는 실제 Native 없이 엔진의 원인·상태 우선순위를 확인한다. Native/파일 통합 테스트에는 프로세스 종료 제한을 두고 필수 누락·skip은 실패한다. [검증 대응표](verification-map.md)에 사례를 고정한다.
+기존 LibraryImport 경로의 실제 DLL 테스트 34개는 기존 20개, 비동기 수명 12개와 M3c 자동 예약 중지·현재 실행 취소 2개다. Core 종료 실패 8개는 실제 Native 없이 엔진의 원인·상태 우선순위를 확인한다. Native/파일 통합 테스트에는 프로세스 종료 제한을 두고 필수 누락·skip은 실패한다. C++/CLI는 별도 34개와 저장 프로세스 2개로 같은 계약을 비교한다. [검증 대응표](verification-map.md)에 사례를 고정한다.
 
 ## 공식 참고
 

@@ -21,7 +21,7 @@ internal static class ServerProgram
         {
             if (args[i] == "--help")
             {
-                Console.WriteLine("Inspection.Host --serve [--pipe NAME] [--inspector managed|native] [--output DIRECTORY] [--device-delay-ms 0..60000]\nType exit or press Ctrl+C to stop and await accepted work.");
+                Console.WriteLine("Inspection.Host --serve [--pipe NAME] [--inspector managed|native|cli] [--output DIRECTORY] [--device-delay-ms 0..60000]\nType exit or press Ctrl+C to stop and await accepted work.");
                 Console.WriteLine("[--store json|sqlite] [--log FILE.jsonl] [--fault none|store|native-inspect|native-wait|ipc-response]");
                 return 0;
             }
@@ -41,7 +41,7 @@ internal static class ServerProgram
                 default: return InvalidArguments();
             }
         }
-        if (!Regex.IsMatch(pipeName, "\\A[A-Za-z0-9_-]{1,80}\\z") || inspectorKind is not ("managed" or "native") || string.IsNullOrWhiteSpace(output)
+        if (!Regex.IsMatch(pipeName, "\\A[A-Za-z0-9_-]{1,80}\\z") || inspectorKind is not ("managed" or "native" or "cli") || string.IsNullOrWhiteSpace(output)
             || storeKind is not ("json" or "sqlite") || string.IsNullOrWhiteSpace(logPath) || !HostStorage.ValidFault(fault, inspectorKind, server: true))
         {
             return InvalidArguments();
@@ -55,9 +55,8 @@ internal static class ServerProgram
             diagnostics = new JsonDiagnosticLog(logPath);
             diagnostics.Write("HostStarting", new { Store = storeKind, Inspector = inspectorKind, Fault = fault });
             HostStorage store = await HostStorage.CreateAsync(storeKind, output, fault);
-            await using NativeInspector? native = inspectorKind == "native" ? new NativeInspector(HostStorage.NativeFault(fault)) : null;
-            IInspector inspector = native is null ? new RangeInspector() : native;
-            await using var engine = new InspectionEngine(new InspectionRunner(new DelayedDevice(delayMilliseconds), inspector, store.Writer), diagnostics: diagnostics);
+            await using var adapter = HostInspector.Create(inspectorKind, fault);
+            await using var engine = new InspectionEngine(new InspectionRunner(new DelayedDevice(delayMilliseconds), adapter.Inspector, store.Writer), diagnostics: diagnostics);
             await using var server = new InspectionPipeServer(pipeName, new RequestDispatcher(engine, store.Reader, store.Search, diagnostics), diagnostics, fault == "ipc-response");
             Task serving = server.RunAsync(stopping.Token);
             Task console = ReadShutdownAsync(stopping);

@@ -9,4 +9,5 @@
     <ProjectReference Include="../Inspection.Infrastructure/Inspection.Infrastructure.csproj" />
     <ProjectReference Include="../Inspection.Interop/Inspection.Interop.csproj" />
   </ItemGroup>
+  <Import Project="../Inspection.CppCli/Consumer.targets" />
 </Project>

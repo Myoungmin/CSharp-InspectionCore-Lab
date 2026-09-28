@@ -16,4 +16,5 @@
     <ProjectReference Include="../../src/Inspection.Interop/Inspection.Interop.csproj" />
     <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
   </ItemGroup>
+  <Import Project="../../src/Inspection.CppCli/Consumer.targets" />
 </Project>

@@ -1,10 +1,10 @@
 @startuml cancel-shutdown-sequence
-title M5 current run stop, native join and Host-owned disposal
+title M6 current run stop, native join and Host-owned disposal
 actor User
 participant Host
 participant InspectionEngine as Engine
 participant InspectionRunner as Runner
-participant NativeInspector as Inspector
+participant "NativeInspector lifetime (native / cli)" as Inspector
 participant "Native DLL / worker" as DLL
 participant "Progress observer" as Observer
 participant "Host diagnostic sink" as Log

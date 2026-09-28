@@ -1,20 +1,20 @@
-# M5 아키텍처
+# M6 아키텍처
 
-Host는 기존 한 건·자동 반복 CLI와 Named Pipe 서버 모드를 제공한다. 별도 Client는 Contracts DTO로 접수·조회·취소를 호출한다. C# RangeInspector와 C++ DLL 기반 NativeInspector를 선택하며 Core Engine의 접수·Busy·상태·취소·타임아웃·순차 자동 반복을 재사용한다. Native 협조적 정지·진행 콜백·실제 종료 후 해제 계약도 유지한다. JSON 또는 SQLite 저장을 선택하고 Host가 구조화 JSONL 진단을 기록한다. SQLite의 GetResult/SearchResults는 실행 접수와 독립된 조회 경로다.
+Host는 기존 한 건·자동 반복 CLI와 Named Pipe 서버 모드를 제공한다. 별도 Client는 Contracts DTO로 접수·조회·취소를 호출한다. C# RangeInspector, LibraryImport 기반 NativeInspector와 C++/CLI CliInspector를 선택하며 Core Engine의 접수·Busy·상태·취소·타임아웃·순차 자동 반복을 재사용한다. Native 협조적 정지·진행 콜백·실제 종료 후 해제 계약도 유지한다. JSON 또는 SQLite 저장을 선택하고 Host가 구조화 JSONL 진단을 기록한다. SQLite의 GetResult/SearchResults는 실행 접수와 독립된 조회 경로다.
 
 책임 분리·도구 체계·완료 경계·JSON 저장·Native 연동을 선택한 이유는 [ADR 목록](adr/README.md)에 기록한다. 이 문서는 현재 계약을 설명하며 결정이 바뀌면 새 ADR과 함께 갱신한다.
 
 ## 프로젝트와 소유권
 
-![M5 runtime](diagrams/generated/architecture.svg)
+![M6 runtime](diagrams/generated/architecture.svg)
 
-Host가 SimulatedDevice, 선택한 IInspector 구현, JSON/SQLite 저장소, JSONL 진단 sink, InspectionRunner, InspectionEngine을 생성한다. NativeInspector는 SafeHandle로 C++ 객체 하나를 소유하며 Host는 Engine의 DisposeAsync를 기다린 후 NativeInspector를 해제한다. JsonResultStore는 각 저장의 FileStream을, SqliteResultStore는 각 호출의 연결·명령·트랜잭션을 메서드 안에서 해제한다. Host는 Engine과 어댑터가 종료된 뒤 로그를 닫는다. Engine은 실행별 토큰·타이머와 자동 세션의 예약 전용 토큰을 소유하고, Engine과 Runner 모두 주입받은 의존성은 해제하지 않는다.
+Host가 SimulatedDevice, 선택한 IInspector 구현, JSON/SQLite 저장소, JSONL 진단 sink, InspectionRunner, InspectionEngine을 생성한다. NativeInspector는 SafeHandle로 C++ 객체 하나를 소유하며 Host는 Engine의 DisposeAsync를 기다린 후 선택한 NativeInspector 또는 CliInspector를 해제한다. CliInspector는 NativeInspector의 수명 코드에 CliNativeApi를 주입해 소유한다. JsonResultStore는 각 저장의 FileStream을, SqliteResultStore는 각 호출의 연결·명령·트랜잭션을 메서드 안에서 해제한다. Host는 Engine과 어댑터가 종료된 뒤 로그를 닫는다. Engine은 실행별 토큰·타이머와 자동 세션의 예약 전용 토큰을 소유하고, Engine과 Runner 모두 주입받은 의존성은 해제하지 않는다.
 
 ![Project references](diagrams/generated/dependencies.generated.svg)
 
-실선은 실제 MSBuild 평가 결과의 관리 프로젝트 참조이며 점선은 Interop의 Native DLL 런타임 호출이다. 관리 프로젝트 8개 중 생산 프로젝트는 BCL과 허용된 프로젝트를 참조하며 Infrastructure에만 Microsoft.Data.Sqlite 9.0.20 직접 패키지 참조를 허용한다. 잠금 파일로 전이 의존성도 고정한다. Client는 Contracts만, Core와 Contracts는 다른 프로젝트를 참조하지 않는다. Tests는 Core만 참조한다. IntegrationTests는 실제 어댑터·DLL·파일·Host/Client 프로세스를 검사하며 Host 참조는 빌드 순서 전용이다. 프레이밍 소스는 Host/Client에 링크하고 Contracts에는 DTO·버전·오류 코드만 둔다. NativeInspection은 독립 C++ DLL이다.
+실선은 평가된 ProjectReference와 명시된 혼합 DLL 파일 참조이며 점선은 Native DLL 호출이다. C# 프로젝트 8개·C++/CLI 1개·Native 1개를 사용한다. C++/CLI는 Core/Interop을 참조하며 Host/통합 테스트는 사전 빌드된 혼합 DLL만 파일 참조한다. 생산 프로젝트는 BCL과 허용된 프로젝트를 참조하며 Infrastructure에만 Microsoft.Data.Sqlite 9.0.20 직접 패키지 참조를 허용한다. 잠금 파일로 전이 의존성도 고정한다. Client는 Contracts만, Core와 Contracts는 다른 프로젝트를 참조하지 않는다. Tests는 Core만 참조한다. IntegrationTests는 실제 어댑터·DLL·파일·Host/Client 프로세스를 검사하며 Host 참조는 빌드 순서 전용이다. 프레이밍 소스는 Host/Client에 링크하고 Contracts에는 DTO·버전·오류 코드만 둔다. NativeInspection은 독립 C++ DLL이다.
 
-Native DLL은 Visual Studio MSBuild로 빌드하고 관리 프로젝트는 dotnet으로 빌드한다. Visual Studio 솔루션에는 Interop 이전에 Native를 빌드하도록 솔루션 의존성을 둔다. [Native ABI와 수명 계약](native-interop.md)을 함께 읽는다.
+Native와 C++/CLI는 Visual Studio MSBuild로 빌드하고 C# 프로젝트는 dotnet으로 빌드한다. build-cppcli.ps1과 Visual Studio 솔루션 모두 Native → Core/Interop → C++/CLI → Host/통합 테스트 순서를 유지한다. 혼합 DLL/ijwhost의 출력·publish 복사와 로드 실패는 [C++/CLI 비교](cpp-cli-comparison.md)를 따른다. [Native ABI와 수명 계약](native-interop.md)을 함께 읽는다.
 
 ## 계약과 실행 순서
 
@@ -42,6 +42,6 @@ SQLite는 RunId 기본 키로 덮어쓰기를 막고 INSERT 트랜잭션의 comm
 
 ## 검증 범위
 
-Core MSTest 94개는 기존 실행·자동 계약과 조회 입력·진단 오류 격리·완료 게시 경계를 검증한다. 시간은 TimeProvider, 비동기 순서는 TaskCompletionSource로 제어한다. 통합 87개는 기존 Native 34개·JSON 6개·IPC 23개와 SQLite 11개·저장 및 진단 프로세스 13개다. SQLite 트리거 롤백·잠금·미커밋 비가시성·재시작 조회와 저장/Native/IPC 장애를 실제로 재현한다. IPC 중 21개는 실제 Host 프로세스(4개는 별도 Client 실행 파일 포함), 2개는 실제 Pipe에서 잘못된 응답을 보내 Client 검증을 확인한다. 준비 출력·상태 응답을 관찰하고 프로세스 종료에 제한 시간을 둔다. 기존 두 검사기의 CLI·JSON·저장 오류·DLL 누락·즉시 타임아웃도 유지한다. [필수 사례 대응표](verification-map.md)로 누락·skip을 검사한다.
+Core MSTest 94개는 기존 실행·자동 계약과 조회 입력·진단 오류 격리·완료 게시 경계를 검증한다. 시간은 TimeProvider, 비동기 순서는 TaskCompletionSource로 제어한다. 통합 123개는 기존 87개와 C++/CLI 비교·수명·프로세스 34개, cli 저장 프로세스 2개다. 기존 Native 34·JSON 6·IPC 23·SQLite 11·저장 및 진단 13개를 유지한다. SQLite 트리거 롤백·잠금·미커밋 비가시성·재시작 조회와 저장/Native/IPC 장애를 실제로 재현한다. IPC 중 21개는 실제 Host 프로세스(4개는 별도 Client 실행 파일 포함), 2개는 실제 Pipe에서 잘못된 응답을 보내 Client 검증을 확인한다. 준비 출력·상태 응답을 관찰하고 프로세스 종료에 제한 시간을 둔다. 기존 두 검사기의 CLI·JSON·저장 오류·DLL 누락·즉시 타임아웃도 유지한다. [필수 사례 대응표](verification-map.md)로 누락·skip을 검사한다.
 
 별도 프로세스도 [자동 실행 계약](auto-contract.md)의 AutoId/RunId 구분과 StopAuto/CancelRun 규칙을 따른다. [IPC 계약](ipc-contract.md)에 크기·버전·오류·재전송·조회 보존 범위를 명시한다. 연결 단절은 작업을 취소하지 않으며 새 연결에서 조회·취소한다. Host가 접수한 수동 실행·자동 세션 상태를 보존하고, 선택한 저장소의 IResultReader가 게시된 과거 결과를 읽는다. SQLite만 IResultSearch를 제공하며 조회는 Engine의 접수 잠금과 독립적이다. 저장 실패의 계산 결과는 상태 진단에만 노출한다. NativeInspector는 Start에서 입력을 복사하고 Wait에서 작업·콜백을 join한다. Wait 실패 시 자원을 보존하고 Engine을 Faulted로 고정한다. TerminationConfirmed=false를 실제 종료로 해석하지 않는다. [장애 대응](troubleshooting.md)을 따른다.

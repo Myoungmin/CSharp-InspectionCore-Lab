@@ -20,8 +20,8 @@ for (int i = 0; i < args.Length; i++)
 {
     if (args[i] == "--help")
     {
-        Console.WriteLine("Inspection.Host [--scenario pass|fail] [--inspector managed|native] [--output DIRECTORY] [--timeout-ms 0..4294967294] [--repeat 1..2147483647 [--interval-ms 0..4294967294]]");
-        Console.WriteLine("Inspection.Host --serve [--pipe NAME] [--inspector managed|native] [--output DIRECTORY] [--device-delay-ms 0..60000]");
+        Console.WriteLine("Inspection.Host [--scenario pass|fail] [--inspector managed|native|cli] [--output DIRECTORY] [--timeout-ms 0..4294967294] [--repeat 1..2147483647 [--interval-ms 0..4294967294]]");
+        Console.WriteLine("Inspection.Host --serve [--pipe NAME] [--inspector managed|native|cli] [--output DIRECTORY] [--device-delay-ms 0..60000]");
         Console.WriteLine("[--store json|sqlite] [--log FILE.jsonl] [--fault none|store|native-inspect|native-wait] (server also supports ipc-response)");
         return 0;
     }
@@ -68,10 +68,10 @@ if (intervalSpecified && repeat is null)
     return 2;
 }
 
-if (scenario is not ("pass" or "fail") || inspectorKind is not ("managed" or "native") || string.IsNullOrWhiteSpace(outputDirectory)
+if (scenario is not ("pass" or "fail") || inspectorKind is not ("managed" or "native" or "cli") || string.IsNullOrWhiteSpace(outputDirectory)
     || storeKind is not ("json" or "sqlite") || string.IsNullOrWhiteSpace(logPath) || !HostStorage.ValidFault(fault, inspectorKind, server: false))
 {
-    Console.Error.WriteLine("Scenario must be pass or fail; inspector must be managed or native; output must be a directory path.");
+    Console.Error.WriteLine("Scenario must be pass or fail; inspector must be managed, native or cli; output must be a directory path.");
     return 2;
 }
 
@@ -91,10 +91,9 @@ try
     double[] samples = scenario == "pass" ? [10, 20, 30, 40] : [10, 20, 30, 140];
     var job = new InspectionJob($"demo-{scenario}", samples, 0, 100);
     HostStorage store = await HostStorage.CreateAsync(storeKind, outputDirectory, fault);
-    await using NativeInspector? nativeInspector = inspectorKind == "native"
-        ? new NativeInspector(HostStorage.NativeFault(fault), progress: progress => Console.WriteLine($"NativeProgress={progress.CompletedSamples}/{progress.TotalSamples}")) : null;
-    IInspector inspector = nativeInspector is null ? new RangeInspector() : nativeInspector;
-    var runner = new InspectionRunner(new SimulatedDevice(), inspector, store.Writer);
+    await using var adapter = HostInspector.Create(inspectorKind, fault,
+        progress => Console.WriteLine($"NativeProgress={progress.CompletedSamples}/{progress.TotalSamples}"));
+    var runner = new InspectionRunner(new SimulatedDevice(), adapter.Inspector, store.Writer);
     await using var engine = new InspectionEngine(runner, diagnostics: diagnostics);
     cancellation.Token.ThrowIfCancellationRequested();
     InspectionRunSnapshot completed;

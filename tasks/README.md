@@ -12,7 +12,7 @@
 | [M3c — 순차 자동 반복](M03c-auto-sequence.md) | Verified | [M3c 실습](../docs/practice-M03c.md), 총 120개 필수 사례·자동 반복 JSON·전체 검증 통과 |
 | [M4 — Named Pipe IPC](M04-named-pipe-ipc.md) | Verified | [M4 실습](../docs/practice-M04.md), 총 146개 필수 사례·프로세스 IPC·전체 검증 통과 |
 | [M5 — 저장·진단](M05-storage-diagnostics.md) | Verified | [M5 실습](../docs/practice-M05.md), 필수 181개·실제 SQLite 재시작/검색·장애 진단·전체 검증 통과 |
-| M6 — C++/CLI 비교 | Planned | 동일 검사 계약을 구현하는 별도 어댑터와 빌드 구성 |
+| [M6 — C++/CLI 비교](M06-cpp-cli-comparison.md) | Verified | [M6 실습](../docs/practice-M06.md), 필수 217개·실제 혼합 DLL/IPC/저장·종료·누락/publish·전체 검증 통과 |
 
 ## 공통 완료 기준
 

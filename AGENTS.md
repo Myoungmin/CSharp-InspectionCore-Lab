@@ -1,6 +1,6 @@
 # Repository instructions
 
-- Current implemented milestone: M5. Follow the accepted roadmap in `InspectionLab-Architecture-and-Codex-Loop.md`; implement one requested milestone/task at a time.
+- Current implemented milestone: M6. Follow the accepted roadmap in `InspectionLab-Architecture-and-Codex-Loop.md`; implement one requested milestone/task at a time.
 - Start tasks from `tasks/template.md`; keep `tasks/README.md` status/evidence and relevant `docs/backlog.md` revisit conditions current. Use the shared completion criteria and distinguish verified implementation from learning progress.
 - Core declares the device, inspector and storage ports. Core must not reference Infrastructure, Host, IPC DTOs or native imports.
 - Host composes dependencies and owns their lifetime. Runner borrows dependencies. Keep JobId separate from RunId.
@@ -17,7 +17,9 @@
 - Follow `docs/adr/README.md`: record each architectural decision in a numbered ADR with context, alternatives, consequences and validation. Link applicable ADRs in the task record, or explain why existing decisions remain sufficient. Update the ADR index, architecture and relevant diagrams with the implementation. Replace an accepted decision through a new ADR with reciprocal supersession links; preserve its original rationale.
 - Keep unit tests independent of real files/devices. Use explicit signals for async tests. Inspection.IntegrationTests exercises the real native DLL, file storage and Host/Client IPC processes. Native and IPC cases are mandatory and must not skip; use bounded process lifetimes and observable readiness/state.
 - Build NativeInspection.vcxproj with Visual Studio MSBuild before managed entrypoints. Do not use dotnet build on the mixed solution; use verify.ps1 or Visual Studio x64. Native exports must contain C++ exceptions, and pinning lasts only through Start/legacy Run; async callback contexts and SafeHandle references must survive until successful Wait.
+- M6 adds Inspection.CppCli implementing IInspector through shared managed NativeInspector lifetime and CliNativeApi direct C++ calls (ADR-0015). Core must remain unaware of this transport. Preserve callback rooting and SafeHandle leases for both paths.
+- Build with scripts/build-cppcli.ps1 before Host/tests: native DLL, locked Core/Interop build, then VS MSBuild C++/CLI. Host/tests use the checked Consumer.targets file reference; never let dotnet build vcxproj. Deploy and verify Inspection.CppCli.dll, ijwhost.dll and NativeInspection.dll (ADR-0016). Only C++/CLI C4679 metadata warnings are excluded; other compiler/linker warnings remain errors.
 - Changes to acceptance criteria, test counts or verification policies require an explanation in the task record, not silent weakening.
 - Maintain `docs/verification-map.json` when required scenarios change. Verification checks exact class/method/data-case identities in TRX as well as test counts. Never regenerate this baseline automatically from candidate test results.
 - Record actual build/test evidence separately from the user's demonstrated understanding. Historical learning files outside this repository are reference material.
-- The autonomous Codex retry controller remains a separate follow-up after the verification flow is stable; it is not implemented in M5.
+- The autonomous Codex retry controller remains a separate follow-up after the verification flow is stable; it is not implemented in M6.

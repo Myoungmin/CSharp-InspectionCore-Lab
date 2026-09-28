@@ -1319,6 +1319,262 @@
                                        ],
                              "source":  "tests/Inspection.IntegrationTests/StorageDiagnosticsTests.cs",
                              "adr":  "docs/adr/0013-sqlite-results-and-query.md"
+                         },
+                         {
+                             "id":  "M6-001",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.CliInspectorTests",
+                             "method":  "ActualAssembly_IsX64MixedModeAndMatchesNativeAbi",
+                             "cases":  [
+                                           "ActualAssembly_IsX64MixedModeAndMatchesNativeAbi"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/CliInspectorTests.cs",
+                             "adr":  "docs/adr/0015-cpp-cli-transport-and-shared-lifetime.md"
+                         },
+                         {
+                             "id":  "M6-002",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.CliInspectorTests",
+                             "method":  "CliNativeAndManaged_AgreeOnSameSamples",
+                             "cases":  [
+                                           "CliNativeAndManaged_AgreeOnSameSamples (0)",
+                                           "CliNativeAndManaged_AgreeOnSameSamples (1)",
+                                           "CliNativeAndManaged_AgreeOnSameSamples (2)",
+                                           "CliNativeAndManaged_AgreeOnSameSamples (3)",
+                                           "CliNativeAndManaged_AgreeOnSameSamples (4)"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/CliInspectorTests.cs",
+                             "adr":  "docs/adr/0015-cpp-cli-transport-and-shared-lifetime.md"
+                         },
+                         {
+                             "id":  "M6-003",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.CliInspectorTests",
+                             "method":  "MemorySlice_UsesOffsetAndElementCount",
+                             "cases":  [
+                                           "MemorySlice_UsesOffsetAndElementCount"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/CliInspectorTests.cs",
+                             "adr":  "docs/adr/0015-cpp-cli-transport-and-shared-lifetime.md"
+                         },
+                         {
+                             "id":  "M6-004",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.CliInspectorTests",
+                             "method":  "InvalidAcquiredSamples_ReturnSameStatusAsPInvoke",
+                             "cases":  [
+                                           "InvalidAcquiredSamples_ReturnSameStatusAsPInvoke (0)",
+                                           "InvalidAcquiredSamples_ReturnSameStatusAsPInvoke (1)",
+                                           "InvalidAcquiredSamples_ReturnSameStatusAsPInvoke (2)",
+                                           "InvalidAcquiredSamples_ReturnSameStatusAsPInvoke (3)"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/CliInspectorTests.cs",
+                             "adr":  "docs/adr/0015-cpp-cli-transport-and-shared-lifetime.md"
+                         },
+                         {
+                             "id":  "M6-005",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.CliInspectorTests",
+                             "method":  "CreateFailure_DoesNotLeakHandle",
+                             "cases":  [
+                                           "CreateFailure_DoesNotLeakHandle"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/CliInspectorTests.cs",
+                             "adr":  "docs/adr/0015-cpp-cli-transport-and-shared-lifetime.md"
+                         },
+                         {
+                             "id":  "M6-006",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.CliInspectorTests",
+                             "method":  "InspectFailure_FaultsRunnerAndPreventsStorage",
+                             "cases":  [
+                                           "InspectFailure_FaultsRunnerAndPreventsStorage"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/CliInspectorTests.cs",
+                             "adr":  "docs/adr/0015-cpp-cli-transport-and-shared-lifetime.md"
+                         },
+                         {
+                             "id":  "M6-007",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.CliInspectorTests",
+                             "method":  "AlreadyCanceled_DoesNotEnterThrowingInspector",
+                             "cases":  [
+                                           "AlreadyCanceled_DoesNotEnterThrowingInspector"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/CliInspectorTests.cs",
+                             "adr":  "docs/adr/0015-cpp-cli-transport-and-shared-lifetime.md"
+                         },
+                         {
+                             "id":  "M6-008",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.CliInspectorTests",
+                             "method":  "DisposeTwice_UsesCliReleaseOnceAndRejectsReuse",
+                             "cases":  [
+                                           "DisposeTwice_UsesCliReleaseOnceAndRejectsReuse"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/CliInspectorTests.cs",
+                             "adr":  "docs/adr/0015-cpp-cli-transport-and-shared-lifetime.md"
+                         },
+                         {
+                             "id":  "M6-009",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.CliInspectorTests",
+                             "method":  "SafeHandleFinalization_CallsCliReleaseForAbandonedAdapter",
+                             "cases":  [
+                                           "SafeHandleFinalization_CallsCliReleaseForAbandonedAdapter"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/CliInspectorTests.cs",
+                             "adr":  "docs/adr/0015-cpp-cli-transport-and-shared-lifetime.md"
+                         },
+                         {
+                             "id":  "M6-010",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.CliLifetimeTests",
+                             "method":  "Progress_IsOrderedRootedAndIsolatedBetweenRuns",
+                             "cases":  [
+                                           "Progress_IsOrderedRootedAndIsolatedBetweenRuns"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/CliLifetimeTests.cs",
+                             "adr":  "docs/adr/0015-cpp-cli-transport-and-shared-lifetime.md"
+                         },
+                         {
+                             "id":  "M6-011",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.CliLifetimeTests",
+                             "method":  "Cancel_WaitsForCallbackAndSuppressesLateNativeNotification",
+                             "cases":  [
+                                           "Cancel_WaitsForCallbackAndSuppressesLateNativeNotification"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/CliLifetimeTests.cs",
+                             "adr":  "docs/adr/0015-cpp-cli-transport-and-shared-lifetime.md"
+                         },
+                         {
+                             "id":  "M6-012",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.CliLifetimeTests",
+                             "method":  "DisposeDuringCallback_WaitsAndDestroysExactlyOnce",
+                             "cases":  [
+                                           "DisposeDuringCallback_WaitsAndDestroysExactlyOnce"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/CliLifetimeTests.cs",
+                             "adr":  "docs/adr/0015-cpp-cli-transport-and-shared-lifetime.md"
+                         },
+                         {
+                             "id":  "M6-013",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.CliLifetimeTests",
+                             "method":  "EngineStop_DrainsNativeCallbackBeforeCompletion",
+                             "cases":  [
+                                           "EngineStop_DrainsNativeCallbackBeforeCompletion (0,Canceled,UserCancellation)",
+                                           "EngineStop_DrainsNativeCallbackBeforeCompletion (1,TimedOut,Timeout)",
+                                           "EngineStop_DrainsNativeCallbackBeforeCompletion (2,Canceled,Shutdown)"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/CliLifetimeTests.cs",
+                             "adr":  "docs/adr/0015-cpp-cli-transport-and-shared-lifetime.md"
+                         },
+                         {
+                             "id":  "M6-014",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.CliLifetimeTests",
+                             "method":  "StopFailure_DrainsWorkThenFaultsEngineAndBlocksAdmission",
+                             "cases":  [
+                                           "StopFailure_DrainsWorkThenFaultsEngineAndBlocksAdmission"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/CliLifetimeTests.cs",
+                             "adr":  "docs/adr/0015-cpp-cli-transport-and-shared-lifetime.md"
+                         },
+                         {
+                             "id":  "M6-015",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.CliLifetimeTests",
+                             "method":  "WaitFailure_QuarantinesHandleAndContextEvenAfterDisposeAndGc",
+                             "cases":  [
+                                           "WaitFailure_QuarantinesHandleAndContextEvenAfterDisposeAndGc"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/CliLifetimeTests.cs",
+                             "adr":  "docs/adr/0015-cpp-cli-transport-and-shared-lifetime.md"
+                         },
+                         {
+                             "id":  "M6-016",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.CliLifetimeTests",
+                             "method":  "CallbackFailure_IsContainedAndJoinedBeforeReturning",
+                             "cases":  [
+                                           "CallbackFailure_IsContainedAndJoinedBeforeReturning (False)",
+                                           "CallbackFailure_IsContainedAndJoinedBeforeReturning (True)"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/CliLifetimeTests.cs",
+                             "adr":  "docs/adr/0015-cpp-cli-transport-and-shared-lifetime.md"
+                         },
+                         {
+                             "id":  "M6-017",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.CliLifetimeTests",
+                             "method":  "Abi_StartCopiesInputAndRejectsReuseOrDestroyUntilWait",
+                             "cases":  [
+                                           "Abi_StartCopiesInputAndRejectsReuseOrDestroyUntilWait"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/CliLifetimeTests.cs",
+                             "adr":  "docs/adr/0015-cpp-cli-transport-and-shared-lifetime.md"
+                         },
+                         {
+                             "id":  "M6-018",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.CliAutoTests",
+                             "method":  "AutoStopAndCancel_DrainRealNativeCallbackBeforeReleasingReservation",
+                             "cases":  [
+                                           "AutoStopAndCancel_DrainRealNativeCallbackBeforeReleasingReservation (False)",
+                                           "AutoStopAndCancel_DrainRealNativeCallbackBeforeReleasingReservation (True)"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/CliAutoTests.cs",
+                             "adr":  "docs/adr/0015-cpp-cli-transport-and-shared-lifetime.md"
+                         },
+                         {
+                             "id":  "M6-019",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.CliProcessTests",
+                             "method":  "SeparateClient_AutoFailPersistsInSelectedStore",
+                             "cases":  [
+                                           "SeparateClient_AutoFailPersistsInSelectedStore (\"json\")",
+                                           "SeparateClient_AutoFailPersistsInSelectedStore (\"sqlite\")"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/CliProcessTests.cs",
+                             "adr":  "docs/adr/0015-cpp-cli-transport-and-shared-lifetime.md"
+                         },
+                         {
+                             "id":  "M6-020",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.CliProcessTests",
+                             "method":  "CliFaults_PreserveRemoteOutcomeAndStructuredCause",
+                             "cases":  [
+                                           "CliFaults_PreserveRemoteOutcomeAndStructuredCause (\"native-inspect\",\"Inspect\",True)",
+                                           "CliFaults_PreserveRemoteOutcomeAndStructuredCause (\"native-wait\",\"Wait\",False)",
+                                           "CliFaults_PreserveRemoteOutcomeAndStructuredCause (\"store\",\"Persist\",True)"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/CliProcessTests.cs",
+                             "adr":  "docs/adr/0015-cpp-cli-transport-and-shared-lifetime.md"
+                         },
+                         {
+                             "id":  "M6-021",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.StorageDiagnosticsTests",
+                             "method":  "SqliteCliAuto_PersistsEveryFailAndLogsEveryCompletion",
+                             "cases":  [
+                                           "SqliteCliAuto_PersistsEveryFailAndLogsEveryCompletion (\"cli\")"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/StorageDiagnosticsTests.cs",
+                             "adr":  "docs/adr/0015-cpp-cli-transport-and-shared-lifetime.md"
+                         },
+                         {
+                             "id":  "M6-022",
+                             "suite":  "integration",
+                             "className":  "Inspection.IntegrationTests.StorageDiagnosticsTests",
+                             "method":  "RestartHost_RetainsResultsAndSearchButNotRequestReplay",
+                             "cases":  [
+                                           "RestartHost_RetainsResultsAndSearchButNotRequestReplay (\"cli\")"
+                                       ],
+                             "source":  "tests/Inspection.IntegrationTests/StorageDiagnosticsTests.cs",
+                             "adr":  "docs/adr/0015-cpp-cli-transport-and-shared-lifetime.md"
                          }
                      ]
 }

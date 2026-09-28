@@ -1,6 +1,6 @@
 # InspectionLab — 아키텍처와 Codex 개발 루프 제안
 
-작성일: 2026-09-26. 구현 착수: 2026-09-27. 이 문서는 전체 단계의 설계이며, 현재 구현 범위는 M5까지다. 현재 코드의 계약은 [아키텍처](docs/architecture.md), [Native ABI](docs/native-interop.md), [Engine 계약](docs/engine-contract.md), [IPC 계약](docs/ipc-contract.md), [저장·진단](docs/storage-diagnostics.md)에 있다. 실제 증거는 [M1 기록](docs/practice-M01.md), [M2 기록](docs/practice-M02.md), [M3a 기록](docs/practice-M03a.md), [M3b 기록](docs/practice-M03b.md), [M3c 기록](docs/practice-M03c.md), [M4 기록](docs/practice-M04.md), [M5 기록](docs/practice-M05.md)에서 구분한다. M6와 Codex 자동 반복 제어기는 후속 계획이다. 기존 학습 진도를 구현 완료로 변경하지 않는다.
+작성일: 2026-09-26. 구현 착수: 2026-09-27. 이 문서는 전체 단계의 설계이며, 현재 구현 범위는 M6까지다. 현재 코드의 계약은 [아키텍처](docs/architecture.md), [Native ABI](docs/native-interop.md), [Engine 계약](docs/engine-contract.md), [IPC 계약](docs/ipc-contract.md), [저장·진단](docs/storage-diagnostics.md), [C++/CLI 비교](docs/cpp-cli-comparison.md)에 있다. 실제 증거는 [M1 기록](docs/practice-M01.md), [M2 기록](docs/practice-M02.md), [M3a 기록](docs/practice-M03a.md), [M3b 기록](docs/practice-M03b.md), [M3c 기록](docs/practice-M03c.md), [M4 기록](docs/practice-M04.md), [M5 기록](docs/practice-M05.md), [M6 기록](docs/practice-M06.md)에서 구분한다. Codex 자동 반복 제어기와 도구 이전은 별도 후속 계획이다. 기존 학습 진도를 구현 완료로 변경하지 않는다.
 
 ## 1. 목표와 근거
 
@@ -73,7 +73,7 @@ flowchart TD
 | 문서 | PlantUML + SVG | 참고 저장소 운영 방식 유지 |
 | 반복 실행 | PowerShell 제어 스크립트 + Codex CLI | Windows 빌드와 함께 단계별 결과를 제어 |
 
-global.json과 패키지 잠금 파일로 초기 버전을 고정한다. .NET 9 지원 종료일인 2026-11-10 전에 .NET 10 전환을 별도 작업으로 수행한다. 관리 프로젝트는 dotnet build/test, Native 프로젝트는 MSVC vcxproj와 MSBuild로 구분한다. C++/CLI의 실제 빌드 가능 여부는 해당 단계에서 별도로 확인한다.
+global.json과 패키지 잠금 파일로 초기 버전을 고정한다. .NET 9 지원 종료일인 2026-11-10 전에 .NET 10 전환을 별도 작업으로 수행한다. 관리 프로젝트는 dotnet build/test, Native 프로젝트는 MSVC vcxproj와 MSBuild로 구분한다. M6에서 실제 C++/CLI Release/Debug 빌드·배포를 확인했다. 현재는 build-cppcli.ps1이 Native → Core/Interop → C++/CLI 순서를 수행하고 Host/테스트는 그 뒤 dotnet으로 빌드한다.
 
 ## 5. 먼저 고정할 동작 계약
 

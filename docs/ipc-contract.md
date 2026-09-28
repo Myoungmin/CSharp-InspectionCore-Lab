@@ -1,6 +1,8 @@
-# M5 IPC 계약
+# M6 IPC 계약
 
 Host와 Client는 서로 다른 프로세스다. Core에는 IPC 의존성이 없다. [ADR-0011](adr/0011-named-pipe-protocol.md)은 전송 경계, [ADR-0013](adr/0013-sqlite-results-and-query.md)은 기존 재전송·연결 수명을 유지하면서 저장소 선택과 검색을 확장한다. M4의 결정은 [ADR-0012](adr/0012-start-request-replay.md)에 보존한다.
+
+M6는 Host의 `--inspector cli` 선택을 추가하며 버전 1과 요청/응답은 그대로다. [C++/CLI 비교](cpp-cli-comparison.md)를 따른다.
 
 ![IPC sequence](diagrams/generated/ipc-sequence.svg)
 

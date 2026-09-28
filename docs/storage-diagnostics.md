@@ -67,6 +67,6 @@ $events | Where-Object { $_.RequestId -eq '조회할 RequestId' }
 | 잘못된 프레임 | 해당 연결 종료, IpcTransportFailed 또는 IpcEnvelopeRejected와 ConnectionId |
 | 실제 SQLite write lock | busy 제한 후 Faulted/Persist, SqliteErrorCode=5, 계산 결과 보존 |
 
-fault 기본값은 none이다. Native fault에는 native 검사기가 필요하며 ipc-response는 서버 모드에서만 허용한다. 옵션은 실습용 Host 설정이고 IPC 요청이 장애 모드를 바꾸지는 못한다. 실제 트랜잭션/잠금 장애는 통합 테스트가 연결·트리거로 재현하며 임의 지연을 성공 판정 신호로 사용하지 않는다.
+fault 기본값은 none이다. Native fault에는 native 또는 cli 검사기가 필요하며 ipc-response는 서버 모드에서만 허용한다. 옵션은 실습용 Host 설정이고 IPC 요청이 장애 모드를 바꾸지는 못한다. 실제 트랜잭션/잠금 장애는 통합 테스트가 연결·트리거로 재현하며 임의 지연을 성공 판정 신호로 사용하지 않는다.
 
 ![Storage and diagnostics](diagrams/generated/storage-diagnostics.svg)

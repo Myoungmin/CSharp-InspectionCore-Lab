@@ -30,7 +30,7 @@ internal sealed record HostStorage(IResultStore Writer, IResultReader Reader, IR
     internal string ResultLocation(Guid runId) => Reader is JsonResultStore json ? json.GetResultPath(runId) : Location;
 
     internal static bool ValidFault(string fault, string inspector, bool server) => fault is "none" or "store"
-        || (inspector == "native" && fault is "native-inspect" or "native-wait") || (server && fault == "ipc-response");
+        || (inspector is "native" or "cli" && fault is "native-inspect" or "native-wait") || (server && fault == "ipc-response");
 
     internal static NativeFaultMode NativeFault(string fault) => fault switch
     {

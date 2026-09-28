@@ -38,6 +38,8 @@ ADR(Architecture Decision Record)은 **무엇을, 왜 선택했고 어떤 대가
 | [0012 — 시작 요청 재전송과 실행 수명](0012-start-request-replay.md) | Superseded | M4 RequestId·조회 보존·재접속; 0013으로 확장 |
 | [0013 — SQLite 결과와 독립 조회 포트](0013-sqlite-results-and-query.md) | Accepted | M5 저장·검색·기존 재전송 정책 유지 |
 | [0014 — 실행과 독립된 구조화 진단](0014-structured-diagnostics.md) | Accepted | M5 단계/완료 관찰·ID 연결·장애 주입 |
+| [0015 — C++/CLI 호출과 공유 수명](0015-cpp-cli-transport-and-shared-lifetime.md) | Accepted | M6 IInspector 교체·직접 C++ 호출·수명 정책 공유 |
+| [0016 — 혼합 DLL 빌드와 배포](0016-cpp-cli-build-and-deployment.md) | Accepted | M6 vcxproj 순서·파일 참조·ijwhost·누락/publish 검증 |
 
 ## 검증 범위
 

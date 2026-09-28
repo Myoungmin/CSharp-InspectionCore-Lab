@@ -1,28 +1,9 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using Microsoft.Win32.SafeHandles;
 
 [assembly: DefaultDllImportSearchPaths(DllImportSearchPath.AssemblyDirectory)]
 
 namespace Inspection.Interop;
-
-[StructLayout(LayoutKind.Sequential)]
-internal struct NativeInspectionResult
-{
-    internal int SampleCount;
-    internal int DefectCount;
-    internal double Score;
-}
-
-internal sealed class NativeInspectorHandle : SafeHandleZeroOrMinusOneIsInvalid
-{
-    public NativeInspectorHandle() : base(ownsHandle: true) { }
-
-    protected override bool ReleaseHandle()
-    {
-        return NativeMethods.Destroy(handle) == NativeStatus.Ok;
-    }
-}
 
 internal static unsafe partial class NativeMethods
 {

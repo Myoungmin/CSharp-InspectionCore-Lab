@@ -20,6 +20,7 @@ public sealed class StorageDiagnosticsTests
     [DataTestMethod]
     [DataRow("managed")]
     [DataRow("native")]
+    [DataRow("cli")]
     public async Task SqliteCliAuto_PersistsEveryFailAndLogsEveryCompletion(string inspector)
     {
         await using var fixture = await LaunchAsync();
@@ -55,6 +56,7 @@ public sealed class StorageDiagnosticsTests
     [DataTestMethod]
     [DataRow("managed")]
     [DataRow("native")]
+    [DataRow("cli")]
     public async Task RestartHost_RetainsResultsAndSearchButNotRequestReplay(string inspector)
     {
         string results;

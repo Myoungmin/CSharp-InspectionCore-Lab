@@ -4,7 +4,7 @@
 
 | ID | 상태·내용 | 영향과 보류 이유 | 재검토 조건 | 완료 증거 |
 | --- | --- | --- | --- | --- |
-| B01 | Planned — .NET 10 이전 | 현재 도구를 유지하기로 한 [ADR-0002](adr/0002-windows-x64-toolchain.md) 적용 | 로드맵의 지원 종료 전 이전 일정에 맞춰 별도 착수 | 새 ADR, IDE·SDK 호환성, 전체 검증 |
+| B01 | Planned — .NET 10 이전 | 현재 도구를 유지하기로 한 [ADR-0002](adr/0002-windows-x64-toolchain.md) 적용 | 로드맵의 지원 종료 전 이전 일정에 맞춰 별도 착수 | 새 ADR, IDE·SDK·C++/CLI 호환성 및 C4679 제외 재검토, 전체 검증 |
 | B02 | Verified — Native 비동기 종료 | M3b에서 Start/Stop/Wait/Destroy와 종료 장애 격리 구현 | M3b 전체 검증 통과; 후속 Native 수명 변경 시 재검토 | [M3b 작업](../tasks/M03b-native-lifetime.md), [ADR-0008](adr/0008-native-async-lifetime.md), [ADR-0009](adr/0009-termination-failure-quarantine.md) |
 | B03 | Deferred — Codex 반복 제어기 | 현재는 검증 스크립트와 수동 개발 흐름이며 제어기는 없음 | Native·M3 검증 흐름 안정 후 별도 요청 | 예산·동일 실패 중단, 별도 리뷰, 보호된 기준 검증, JSON 보고서 |
 | B04 | Deferred — CI와 증거 보관 | 검증 로그는 현재 로컬 artifacts에만 있음 | 원격 CI 구성 작업 시 | 고정 MSVC·SDK·Java·PlantUML 준비, 새 checkout 검증, TRX·요약·로그 보관 |

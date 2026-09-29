@@ -68,6 +68,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify.ps1
 ## 구조와 다음 단계
 
 - [작업 목록·템플릿·완료 기준](tasks/README.md)
+- [M0~M6 전체 구성 검토와 완료 범위](tasks/DEV02-architecture-review.md)
+- [Codex 제어기·CI·장기 운영 검토](docs/development-operations-review.md)
 - [핵심 계약과 필수 검증](docs/verification-map.md)
 - [보류 사항과 재검토 기준](docs/backlog.md)
 - [현재 아키텍처와 계약](docs/architecture.md)
@@ -98,6 +100,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify.ps1
 - [문서 유지 규칙](docs/documentation-rules.md)
 - [전체 단계와 Codex 루프 설계](InspectionLab-Architecture-and-Codex-Loop.md)
 
-M0~M6의 구현 단계는 완료했으며 후속 개발은 보류 목록에서 작업을 선택한다. 지원 종료 전 .NET 10 이전(B01)을 우선 재검토한다. Native Wait 실패로 종료를 확인하지 못하면 자원을 보존하고 같은 엔진의 재접수를 거절하며 복구는 Host 재시작으로 수행한다. IPC의 시작 재전송 보장은 Host 수명 안으로 한정한다. Codex 자동 반복 제어기, .NET 10 전환과 장기 운영의 보존·백업은 별도 작업이다.
+M0~M6의 기능 구현·검증 단계는 완료했다. 2026-09-29 사용자 요청에 따라 .NET 10 이전(B01)은 필요할 때 별도 착수하며 현재 SDK/대상을 유지한다. 다음 활동은 전체 구조·계약 검토와 직접 실습이다. Codex 자동 반복 제어기(B03), CI(B04), 편집 규칙(B05), 장기 운영(B08)은 미구현 후속 작업이며 M0~M6 완료와 구분한다. 사용자 학습 완료도 별도로 확인한다.
+
+Native Wait 실패로 종료를 확인하지 못하면 자원을 보존하고 같은 엔진의 재접수를 거절하며 복구는 Host 재시작으로 수행한다. IPC의 시작 재전송 보장은 Host 수명 안으로 한정한다. 실제 배포의 지원 정책이나 도구 호환성 요구가 생기면 [보류 목록](docs/backlog.md)의 조건으로 전환을 재검토한다.
 
 구조나 계약을 결정할 때는 ADR을 한 건씩 추가하고 구현·아키텍처·관련 다이어그램과 함께 갱신한다. 전체 설계 문서는 단계별 계획으로 계속 커밋하며, 현재 구조와 결정 이력은 각각 architecture.md와 ADR에서 관리한다.

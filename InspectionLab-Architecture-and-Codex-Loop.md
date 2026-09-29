@@ -31,14 +31,15 @@ Job은 처음에는 `Prepare → Acquire → Inspect → Persist`의 고정 순�
 
 | 프로젝트 | 책임 | 허용 의존성 |
 | --- | --- | --- |
-| Inspection.Core | Job, 실행 제어, 상태, 결과, 외부 기능 인터페이스 | BCL 및 필요한 작은 공통 추상화 |
-| Inspection.Infrastructure | 가상 장비, 파일/SQLite 저장 구현 | Core |
+| Inspection.Core | Job, 실행 제어, 상태, 결과, 외부 기능 인터페이스 | BCL; 다른 프로젝트 참조 없음 |
+| Inspection.Infrastructure | 가상 장비, C# 검사기, 파일/SQLite 저장 구현 | Core, Microsoft.Data.Sqlite |
 | Inspection.Interop | LibraryImport, SafeHandle, Native 오류·콜백 변환 | Core, Native DLL 런타임 호출 |
+| Inspection.CppCli | C++/CLI IInspector, 직접 C++ 호출과 공유 관리 수명 연결 | Core, Interop, Native import library |
 | Inspection.Contracts | IPC 요청·응답 DTO, 프로토콜 버전·오류 코드 | BCL |
-| Inspection.Host | 실행 프로세스, 인스턴스 조립, IPC 서버, 종료 | Core, Infrastructure, Interop, Contracts |
+| Inspection.Host | 실행 프로세스, 인스턴스 조립, IPC 서버, 종료 | Core, Infrastructure, Interop, Contracts, 사전 빌드된 CppCli 파일 참조 |
 | Inspection.Client | 별도 콘솔 클라이언트 | Contracts |
 | NativeInspection | C ABI를 노출하는 C++ 가상 검사 DLL | C++ 표준 라이브러리 |
-| Inspection.Tests | MSTest 단위 테스트와 직접 만든 테스트 대역 | Core, 필요한 테스트 대상 |
+| Inspection.Tests | MSTest 단위 테스트와 직접 만든 테스트 대역 | Core |
 | Inspection.IntegrationTests | 실제 DLL·파일·IPC 통합 검증 | 실제 어댑터와 Host |
 
 Core는 Host, IPC DTO, 저장 구현, P/Invoke 선언을 참조하지 않는다. Host는 생성과 종료를 책임지는 조립 지점이다. 최초에는 생성자 주입으로 직접 연결하고, 실행·종료 구성이 커질 때 Generic Host/DI 컨테이너를 도입한다.
@@ -73,7 +74,7 @@ flowchart TD
 | 문서 | PlantUML + SVG | 참고 저장소 운영 방식 유지 |
 | 반복 실행 | PowerShell 제어 스크립트 + Codex CLI | Windows 빌드와 함께 단계별 결과를 제어 |
 
-global.json과 패키지 잠금 파일로 초기 버전을 고정한다. .NET 9 지원 종료일인 2026-11-10 전에 .NET 10 전환을 별도 작업으로 수행한다. 관리 프로젝트는 dotnet build/test, Native 프로젝트는 MSVC vcxproj와 MSBuild로 구분한다. M6에서 실제 C++/CLI Release/Debug 빌드·배포를 확인했다. 현재는 build-cppcli.ps1이 Native → Core/Interop → C++/CLI 순서를 수행하고 Host/테스트는 그 뒤 dotnet으로 빌드한다.
+global.json과 패키지 잠금 파일로 초기 버전을 고정한다. 2026-09-29 사용자 요청으로 .NET 10 전환은 필요 시까지 보류한다. 새 기능·패키지·IDE 호환성 요구나 실제 배포의 지원 정책을 검토할 때 [B01](docs/backlog.md)의 조건에 따라 별도 전환 작업을 시작한다. 관리 프로젝트는 dotnet build/test, Native 프로젝트는 MSVC vcxproj와 MSBuild로 구분한다. M6에서 실제 C++/CLI Release/Debug 빌드·배포를 확인했다. 현재는 build-cppcli.ps1이 Native → Core/Interop → C++/CLI 순서를 수행하고 Host/테스트는 그 뒤 dotnet으로 빌드한다.
 
 ## 5. 먼저 고정할 동작 계약
 
@@ -88,7 +89,7 @@ global.json과 패키지 잠금 파일로 초기 버전을 고정한다. .NET 9 
 
 ### 상태와 결과
 
-- M3에서 도입할 실행 상태: Running, Persisting, CancelRequested, Succeeded, Canceled, TimedOut, Faulted. 큐가 없는 초기 버전에는 Queued를 두지 않는다.
+- 현재 실행 상태: Running, Persisting, CancelRequested, Succeeded, Canceled, TimedOut, Faulted. 큐가 없는 현재 버전에는 Queued를 두지 않는다.
 - 엔진 수명: Ready, Stopping, Faulted, Disposed. 수동/자동은 별도 모드다.
 - 제품 판정: Pass/Fail. 불량 판정 Fail은 검사 실행 실패 Faulted와 다르다.
 - 저장 실패는 성공으로 보고하지 않는다. 계산 결과와 저장 상태를 구분해 진단 가능하게 남긴다.
@@ -100,7 +101,7 @@ global.json과 패키지 잠금 파일로 초기 버전을 고정한다. .NET 9 
 - 첫 Native 검사는 동기식 숫자 배열 처리로 시작한다. 이후 Start/RequestStop/Wait/Destroy 및 진행 콜백으로 확장한다.
 - Native 객체 생성·해제는 Interop 어댑터가 소유한다. 외부 주입된 객체를 Core가 임의로 Dispose하지 않는다.
 - 취소 요청과 실제 Native 종료를 구분한다. Task 대기 타임아웃만으로 DLL 작업이 끝났다고 취급하지 않는다.
-- 종료 순서: 새 요청 차단 → 자동 예약 중지 → 취소 요청 → 실행과 콜백 종료 대기 → Native 자원 해제 → 저장·IPC 종료.
+- 현재 서버 종료 순서: IPC 리스너·연결 종료 → Engine의 새 실행 차단·자동 예약 중지·현재 실행 취소 요청 → 실행·저장·콜백·진단 완료 대기 → 어댑터 해제 → JSONL 로그 종료. 이미 Persisting이면 저장 완료를 기다린다. SQLite 연결과 JSON 스트림은 각 저장소 호출에서 해제한다.
 - 콜백은 잠금 안에서 외부 구독자를 호출하지 않고, 관리 예외를 Native 경계 밖으로 전달하지 않는다. 콜백 delegate는 실제 호출 가능 기간 전체에 걸쳐 유지한다.
 - Native 정지가 실패하면 사용 중인 핸들을 강제로 해제하거나 Ready로 복귀하지 않는다. 초기 가상 DLL은 협조적 중단을 보장한다. 강제 복구가 필요할 때 별도 Native worker 프로세스로 확장한다.
 - C ABI 밖으로 C++ 예외를 내보내지 않는다. Native 오류 코드와 진단 정보를 관리 예외 또는 명시된 실행 결과로 변환한다.
@@ -133,6 +134,10 @@ global.json과 패키지 잠금 파일로 초기 버전을 고정한다. .NET 9 
 
 M0·M1을 첫 실행 목표로 묶는다. M0의 빈 테스트는 미구현으로 보고하고 M1부터 0개 실행을 실패로 처리한다. 자동화는 M0의 검증 스크립트부터 시작하고 M1은 수동 구현·검증·리뷰로 확인한다. M2 이후 안정화된 검증 흐름에 반복 제어기를 추가한다.
 
+현재 M0~M6의 기능 구현과 필수 217개 사례 검증은 완료했다. [전체 구성 검토](tasks/DEV02-architecture-review.md)에 완료 범위와 후속 작업을 정리한다. 위 단계의 완료는 아래 8절의 자동 제어기까지 구현했다는 뜻이 아니다. 자동 제어기는 B03으로 보류하며 CI·장기 운영과 사용자 학습 확인도 별도로 남긴다.
+
+2026-09-29에 [자동 제어기·CI·장기 운영의 최소 범위](docs/development-operations-review.md)를 추가 검토했다. 현재 학습·개발 목적에서는 CI → 로컬 제어기 → 장기 운영 순서를 권장하며, 실제 장시간 운영을 시작한다면 보존·백업·복원을 앞당긴다. 이 순서는 검토 제안이며 세 기능을 이번에 구현하거나 운영 설정을 바꾼 것은 아니다.
+
 처음 만드는 프로젝트는 Core, Infrastructure, Host, Tests 네 개다. Interop·NativeInspection·IntegrationTests는 M2, Contracts·Client는 M4에 추가한다. Runner는 한 건의 단계 순서, M3의 Engine은 접수·중복 차단·상태·자동 반복을 담당한다. Logging은 M1부터 RunId를 포함해 시작하고 M5에서 조회·진단을 다듬는다.
 
 ## 7. 다이어그램 관리
@@ -146,6 +151,10 @@ M0·M1을 첫 실행 목표로 묶는다. M0의 빈 테스트는 미구현으로
 | run-sequence.puml | 정상 실행에서 누가 언제 호출되는가? | 실행 경로 변경 |
 | cancel-shutdown-sequence.puml | 취소 후 언제 자원을 해제하는가? | 종료·콜백 수명 변경 |
 | run-state.puml | 허용되는 상태 전이는 무엇인가? | 상태·전이 규칙 변경 |
+| auto-sequence.puml | 자동 예약 중지와 현재 실행 취소는 어떻게 다른가? | M3c 반복·종료 계약 변경 |
+| ipc-sequence.puml | 접수·재전송·단절 이후 작업은 어떻게 유지되는가? | M4 프로세스·프로토콜 변경 |
+| storage-diagnostics.puml | 저장·조회·진단과 완료 게시는 어떻게 연결되는가? | M5 저장·관찰 경계 변경 |
+| cpp-cli-comparison.puml | 두 ABI 호출 방식은 어떤 수명 정책을 공유하는가? | M6 호출·소유권 변경 |
 
 M0는 상위 구조·실제 참조 관계, M1은 핵심 타입·정상 실행, M2는 Native 소유권 다이어그램을 둔다. M3a에 실행 State Diagram과 관리 취소·종료 Sequence Diagram을 추가했다. M3b에서 Native 작업·진행 콜백의 join과 종료 미확인 시 자원 보존을 해당 그림에 반영했다. M3c는 자동 예약·중지·현재 취소 흐름 그림을 추가했다.
 
@@ -166,7 +175,7 @@ M2에서 [ADR 목록과 절차](docs/adr/README.md)를 개발 흐름에 추가�
 
 ## 8. Codex 개선 루프
 
-검사 프로그램과 별개인 개발 도구 흐름으로 둔다. 실행 중인 제품 Core가 Codex를 호출하지 않는다. 예정된 시간에 실행하는 예약 작업은 이번 범위가 아니다.
+이 절의 자동 반복 제어기는 미구현 후속 계획(B03)이다. 현재는 작업 기록·검증 스크립트·수동 구현/리뷰 흐름을 사용한다. 검사 프로그램과 별개인 개발 도구 흐름으로 두며 실행 중인 제품 Core가 Codex를 호출하지 않는다. 예정된 시간에 실행하는 예약 작업은 이번 범위가 아니다.
 
 ```mermaid
 flowchart TD
@@ -193,9 +202,9 @@ flowchart TD
 | tasks/M01-run-one-job.md | 이번 목표, 허용 범위, 완료 조건, 학습할 판단 |
 | scripts/verify.ps1 | 빌드·MSTest·통합·의존성·문서 검증의 공통 진입점 |
 | scripts/build-docs.ps1 | PlantUML·SVG·상대 링크와 ADR 형식·목록 검사 |
-| scripts/improve.ps1 | Codex 호출·검증·리뷰·횟수 제한의 제어기 |
-| tools/ArchitectureChecks | 실제 참조 관계 검사와 추출; 필요한 시점에 도입 |
-| artifacts/runs/<run-id>/ | diff, 테스트 결과, 리뷰 JSON, 실행 로그, 반복 횟수 |
+| scripts/improve.ps1 | 미구현: Codex 호출·검증·리뷰·횟수 제한의 제어기 |
+| tools/ArchitectureChecks | 미도입: 현재 실제 참조 검사·추출은 scripts/check-architecture.ps1이 담당 |
+| artifacts/runs/<run-id>/ | 계획: diff, 테스트 결과, 리뷰 JSON, 실행 로그, 반복 횟수; 현재 검증 증거는 artifacts/verification/<id>/ |
 
 ### 반복 절차
 

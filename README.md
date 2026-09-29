@@ -63,13 +63,14 @@ $env:PLANTUML_JAR = 'C:\tools\plantuml.jar'
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify.ps1
 ```
 
-검증 스크립트는 Native·C++/CLI 선행 빌드 → 관리 프로젝트의 잠금 파일 restore·Release 빌드 → Core 단위 테스트 → Native·파일·IPC 통합 테스트 → 세 검사기의 CLI·JSON → 의존성·문서를 검사한다. 필수 테스트는 Core 94개와 통합 123개(기존 87 + C++/CLI 34 + cli 저장 프로세스 2), 총 217개다. 기존 IPC 중 21개는 실제 Host 프로세스이며 그중 4개는 별도 Client 실행 파일도 사용한다. 전체 수와 함께 필수 클래스·메서드·데이터 사례를 확인한다. 세 검사기의 DLL 해시·누락·저장 실패·인수·타임아웃·자동 반복과 publish 실행을 검사한다. ADR 16건·다이어그램 11개·상대 링크를 검사한다. 누락·skip·결과 파일 누락·검증 중 소스 변경은 실패다. 상세 결과는 `artifacts/verification/<id>/summary.json`, TRX와 로그에 남고 IPC 프로세스 로그는 `artifacts/ipc-tests`에 남는다.
+검증 스크립트는 Native·C++/CLI 선행 빌드 → 관리 프로젝트의 잠금 파일 restore·Release 빌드 → Core 단위 테스트 → Native·파일·IPC 통합 테스트 → 세 검사기의 CLI·JSON → 의존성·문서를 검사한다. 필수 테스트는 Core 94개와 통합 123개(기존 87 + C++/CLI 34 + cli 저장 프로세스 2), 총 217개다. 기존 IPC 중 21개는 실제 Host 프로세스이며 그중 4개는 별도 Client 실행 파일도 사용한다. 전체 수와 함께 필수 클래스·메서드·데이터 사례를 확인한다. 세 검사기의 DLL 해시·누락·저장 실패·인수·타임아웃·자동 반복과 publish 실행을 검사한다. ADR 17건·다이어그램 12개·상대 링크를 검사한다. 누락·skip·결과 파일 누락·검증 중 소스 변경은 실패다. 상세 결과는 `artifacts/verification/<id>/summary.json`, TRX와 로그에 남고 IPC 프로세스 로그는 `artifacts/ipc-tests`에 남는다.
 
 ## 구조와 다음 단계
 
 - [작업 목록·템플릿·완료 기준](tasks/README.md)
 - [M0~M6 전체 구성 검토와 완료 범위](tasks/DEV02-architecture-review.md)
 - [Codex 제어기·CI·장기 운영 검토](docs/development-operations-review.md)
+- [Windows CI 실행·증거 보관](docs/continuous-integration.md)
 - [핵심 계약과 필수 검증](docs/verification-map.md)
 - [보류 사항과 재검토 기준](docs/backlog.md)
 - [현재 아키텍처와 계약](docs/architecture.md)
@@ -100,7 +101,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify.ps1
 - [문서 유지 규칙](docs/documentation-rules.md)
 - [전체 단계와 Codex 루프 설계](InspectionLab-Architecture-and-Codex-Loop.md)
 
-M0~M6의 기능 구현·검증 단계는 완료했다. 2026-09-29 사용자 요청에 따라 .NET 10 이전(B01)은 필요할 때 별도 착수하며 현재 SDK/대상을 유지한다. 다음 활동은 전체 구조·계약 검토와 직접 실습이다. Codex 자동 반복 제어기(B03), CI(B04), 편집 규칙(B05), 장기 운영(B08)은 미구현 후속 작업이며 M0~M6 완료와 구분한다. 사용자 학습 완료도 별도로 확인한다.
+M0~M6의 기능 구현·검증 단계는 완료했다. 2026-09-29 사용자 요청에 따라 .NET 10 이전(B01)은 필요할 때 별도 착수하며 현재 SDK/대상을 유지한다. 전체 구조·계약 검토는 DEV02에 기록했다. B04 Windows CI는 새 원격 runner에서 217개 통과와 의도한 실패·증거 보관까지 확인했으며 실제 실행 링크는 [DEV03](tasks/DEV03-windows-ci.md)에 있다. main 통합·필수 상태 검사 설정은 별도다. Codex 자동 반복 제어기(B03), 편집 규칙(B05), 장기 운영(B08)은 미구현 후속 작업이며 M0~M6 완료와 구분한다. 사용자 직접 실습·학습 완료도 별도로 확인한다.
 
 Native Wait 실패로 종료를 확인하지 못하면 자원을 보존하고 같은 엔진의 재접수를 거절하며 복구는 Host 재시작으로 수행한다. IPC의 시작 재전송 보장은 Host 수명 안으로 한정한다. 실제 배포의 지원 정책이나 도구 호환성 요구가 생기면 [보류 목록](docs/backlog.md)의 조건으로 전환을 재검토한다.
 

@@ -29,6 +29,7 @@
 | 별도 Client·JSON/SQLite 자동 실행·C++/CLI 오류 진단 | [ADR-0015](adr/0015-cpp-cli-transport-and-shared-lifetime.md) | [CliProcessTests](../tests/Inspection.IntegrationTests/CliProcessTests.cs), M6-019~020: 5개 |
 | C++/CLI SQLite CLI·재시작 조회 | [ADR-0015](adr/0015-cpp-cli-transport-and-shared-lifetime.md) | StorageDiagnosticsTests의 cli 데이터 사례, M6-021~022: 2개 |
 | 혼합 DLL·ijwhost·Native DLL 해시/누락·publish 실행 | [ADR-0016](adr/0016-cpp-cli-build-and-deployment.md) | verify.ps1에서 독립 검사; MSTest 개수와 구분 |
+| CI 도구 pin·실패 전달·새 checkout·성공/실패 증거 보관 | [ADR-0017](adr/0017-windows-ci-and-verification-evidence.md) | [DEV03](../tasks/DEV03-windows-ci.md)의 사전 검사·실제 CI 실행 증거; MSTest 개수와 구분 |
 
 verify.ps1은 전체 실행 수·실패·skip 검사에 더해 `check-required-tests.ps1`로 각 필수 클래스·메서드·데이터 사례가 정확히 한 번 실행되어 Passed인지 확인한다. 다른 테스트가 늘어나 전체 수를 채워도 필수 사례 누락은 실패한다. 추가 테스트는 허용한다. TRX의 매 실행 UUID는 기준으로 사용하지 않는다.
 

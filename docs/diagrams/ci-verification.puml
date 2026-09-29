@@ -1,0 +1,32 @@
+@startuml ci-verification
+!pragma layout smetana
+title Windows CI - verification and evidence
+start
+:Push main / ci branch, PR or manual run;
+:Checkout exact revision;
+:Record workflow and runner identity;
+:Install SDK from global.json;
+:Check MSVC, Windows SDK, C++/CLI,
+Java 11 and pinned PlantUML hash;
+if (Environment ready?) then (yes)
+  :Run existing verify.ps1;
+  :Native + managed + C++/CLI builds;
+  :217 mandatory cases, CLI / IPC / publish,
+architecture and documentation;
+  if (All checks pass?) then (yes)
+    :Report Passed;
+  else (no)
+    :Report Verification failure;
+  endif
+else (no)
+  :Report Preflight / setup failure;
+endif
+:Always attempt evidence upload;
+:Retain environment, summary, TRX,
+manifest and logs for 14 days;
+note right
+No automatic merge or deployment.
+Runner loss can prevent upload.
+end note
+stop
+@enduml

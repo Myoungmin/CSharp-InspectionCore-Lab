@@ -16,6 +16,8 @@ Host가 SimulatedDevice, 선택한 IInspector 구현, JSON/SQLite 저장소, JSO
 
 Native와 C++/CLI는 Visual Studio MSBuild로 빌드하고 C# 프로젝트는 dotnet으로 빌드한다. build-cppcli.ps1과 Visual Studio 솔루션 모두 Native → Core/Interop → C++/CLI → Host/통합 테스트 순서를 유지한다. 혼합 DLL/ijwhost의 출력·publish 복사와 로드 실패는 [C++/CLI 비교](cpp-cli-comparison.md)를 따른다. [Native ABI와 수명 계약](native-interop.md)을 함께 읽는다.
 
+B04의 [Windows CI](continuous-integration.md)는 같은 고정 환경과 verify.ps1을 새 checkout에서 실행하고 성공·실패 증거를 보관한다. 개발 검증 인프라이며 제품 프로젝트 참조나 런타임 소유권은 바꾸지 않는다. 실행·보관 결정은 [ADR-0017](adr/0017-windows-ci-and-verification-evidence.md), 실제 확인 상태는 [DEV03](../tasks/DEV03-windows-ci.md)을 따른다.
+
 ## 계약과 실행 순서
 
 ![Core contracts](diagrams/generated/core-class.svg)

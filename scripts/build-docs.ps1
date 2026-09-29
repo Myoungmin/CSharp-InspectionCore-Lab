@@ -48,8 +48,8 @@ $java = (Get-Command java -ErrorAction Stop).Source
 $outputDir = Join-Path $repoRoot ('artifacts/docs/' + [Guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
 $sources = @(Get-ChildItem -LiteralPath $diagramDir -Filter '*.puml' -File | Sort-Object Name)
-$requiredDiagrams = @('architecture', 'auto-sequence', 'cancel-shutdown-sequence', 'core-class', 'cpp-cli-comparison', 'dependencies.generated', 'ipc-sequence', 'native-interop', 'run-sequence', 'run-state', 'storage-diagnostics')
-if (($sources.BaseName -join ',') -ne (($requiredDiagrams | Sort-Object) -join ',')) { throw 'M6 requires the eleven documented diagrams. Review the inventory when adding milestones.' }
+$requiredDiagrams = @('architecture', 'auto-sequence', 'cancel-shutdown-sequence', 'ci-verification', 'core-class', 'cpp-cli-comparison', 'dependencies.generated', 'ipc-sequence', 'native-interop', 'run-sequence', 'run-state', 'storage-diagnostics')
+if (($sources.BaseName -join ',') -ne (($requiredDiagrams | Sort-Object) -join ',')) { throw 'M6 and CI require twelve documented diagrams. Review the inventory when adding milestones.' }
 foreach ($source in $sources) {
     & $java '-Dfile.encoding=UTF-8' -jar $env:PLANTUML_JAR -charset UTF-8 -failfast2 -checkonly $source.FullName
     if ($LASTEXITCODE -ne 0) { throw "PlantUML syntax failed: $($source.Name)" }
@@ -96,4 +96,4 @@ foreach ($match in [regex]::Matches($classDiagram, '(?m)^\s*(?:class|interface|e
         throw "Core type in diagram is missing: $name"
     }
 }
-Write-Host 'Documentation: ADRs, syntax, eleven SVGs, relative links and named Core types passed.'
+Write-Host 'Documentation: ADRs, syntax, twelve SVGs, relative links and named Core types passed.'

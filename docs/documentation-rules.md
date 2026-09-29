@@ -2,7 +2,7 @@
 
 작업은 [템플릿과 공통 완료 기준](../tasks/README.md)에 따라 기록한다. 테스트 계약 변경은 [검증 대응표](verification-map.md), 미해결·보류 사항은 [재검토 목록](backlog.md)을 갱신한다. 필수 테스트 사례의 메타데이터는 문서 검사, 실제 실행 여부는 전체 검증에서 확인한다.
 
-문서는 현재 구현과 후속 계획을 구분한다. 새 모듈·책임 변경은 architecture, Core 포트·소유권 변경은 core-class, Native 핸들 소유권은 native-interop, 호출 순서 변경은 run-sequence에 반영한다. 현재 다이어그램은 참조 관계·실행 상태·관리 취소와 종료를 포함한 11개다. M6의 cpp-cli-comparison은 두 ABI 호출 방식과 공유 수명 코드를 구분한다. M5는 SQLite 트랜잭션·독립 조회·잠금 밖 진단과 완료 게시를 storage-diagnostics에 설명한다. M4는 별도 Client와 프레이밍·재접속·접수 재전송을 ipc-sequence에 설명한다. M3c는 자동 예약·중지와 현재 실행 취소를 auto-sequence에 설명한다. M3b에서 Native 비동기 작업·콜백 join과 종료 실패 시 자원 보존을 반영했다. 이후 상태·수명 계약이 바뀌면 같은 그림과 ADR을 함께 갱신한다.
+문서는 현재 구현과 후속 계획을 구분한다. 새 모듈·책임 변경은 architecture, Core 포트·소유권 변경은 core-class, Native 핸들 소유권은 native-interop, 호출 순서 변경은 run-sequence에 반영한다. 현재 다이어그램은 참조 관계·실행 상태·관리 취소와 종료를 포함한 12개다. B04의 ci-verification은 도구 준비·전체 검증·성공/실패 증거 보관을 설명한다. M6의 cpp-cli-comparison은 두 ABI 호출 방식과 공유 수명 코드를 구분한다. M5는 SQLite 트랜잭션·독립 조회·잠금 밖 진단과 완료 게시를 storage-diagnostics에 설명한다. M4는 별도 Client와 프레이밍·재접속·접수 재전송을 ipc-sequence에 설명한다. M3c는 자동 예약·중지와 현재 실행 취소를 auto-sequence에 설명한다. M3b에서 Native 비동기 작업·콜백 join과 종료 실패 시 자원 보존을 반영했다. 이후 상태·수명 계약이 바뀌면 같은 그림과 ADR을 함께 갱신한다.
 
 ## 아키텍처 결정
 

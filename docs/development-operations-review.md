@@ -1,6 +1,6 @@
 # M0~M6 구성과 개발 자동화·운영 검토
 
-검토일: 2026-09-29. 기준 구현: `45792b8`. [검토 작업과 증거](../tasks/DEV02-architecture-review.md), [현재 아키텍처](architecture.md), [후속 목록](backlog.md)을 함께 읽는다. 이 문서의 후속 구성은 제안이며 구현 완료나 새 아키텍처 결정의 채택을 의미하지 않는다. 착수할 때 작업별 ADR·인수 조건을 확정한다.
+검토일: 2026-09-29. 기준 구현: `45792b8`. 아래는 검토 당시 상태이며, 이후 B04 구현·원격 검증 상태는 [DEV03](../tasks/DEV03-windows-ci.md)과 [현재 CI](continuous-integration.md)에 기록한다. [검토 작업과 증거](../tasks/DEV02-architecture-review.md), [현재 아키텍처](architecture.md), [후속 목록](backlog.md)을 함께 읽는다. 이 문서의 후속 구성은 제안이며 구현 완료나 새 아키텍처 결정의 채택을 의미하지 않는다. 착수할 때 작업별 ADR·인수 조건을 확정한다.
 
 ## 완료 범위와 현재 구조
 

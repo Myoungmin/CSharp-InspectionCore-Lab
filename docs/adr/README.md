@@ -40,6 +40,7 @@ ADR(Architecture Decision Record)은 **무엇을, 왜 선택했고 어떤 대가
 | [0014 — 실행과 독립된 구조화 진단](0014-structured-diagnostics.md) | Accepted | M5 단계/완료 관찰·ID 연결·장애 주입 |
 | [0015 — C++/CLI 호출과 공유 수명](0015-cpp-cli-transport-and-shared-lifetime.md) | Accepted | M6 IInspector 교체·직접 C++ 호출·수명 정책 공유 |
 | [0016 — 혼합 DLL 빌드와 배포](0016-cpp-cli-build-and-deployment.md) | Accepted | M6 vcxproj 순서·파일 참조·ijwhost·누락/publish 검증 |
+| [0017 — Windows CI와 증거 보관](0017-windows-ci-and-verification-evidence.md) | Accepted | B04 고정 도구 검사·전체 검증·성공/실패 artifact |
 
 ## 검증 범위
 

@@ -138,7 +138,7 @@ M0·M1을 첫 실행 목표로 묶는다. M0의 빈 테스트는 미구현으로
 
 2026-09-29에 [자동 제어기·CI·장기 운영의 최소 범위](docs/development-operations-review.md)를 추가 검토했다. 현재 학습·개발 목적에서는 CI → 로컬 제어기 → 장기 운영 순서를 권장하며, 실제 장시간 운영을 시작한다면 보존·백업·복원을 앞당긴다. 이 순서는 검토 제안이며 세 기능을 이번에 구현하거나 운영 설정을 바꾼 것은 아니다.
 
-후속 B04에서 [Windows CI](docs/continuous-integration.md)와 성공·실패 증거 보관을 추가한다. [ADR-0017](docs/adr/0017-windows-ci-and-verification-evidence.md)에 고정 도구·전체 검증·artifact 정책을, [DEV03](tasks/DEV03-windows-ci.md)에 실제 로컬·원격 검증 상태를 기록한다. B03 자동 반복 제어기와 B08 장기 운영은 계속 별도 범위다.
+후속 B04에서 [Windows CI](docs/continuous-integration.md)와 성공·실패 증거 보관을 추가했다. [ADR-0017](docs/adr/0017-windows-ci-and-verification-evidence.md)에 고정 도구·전체 검증·artifact 정책을, [DEV03](tasks/DEV03-windows-ci.md)에 실제 로컬·원격 검증 상태를 기록한다. B03 자동 반복 제어기와 B08 장기 운영은 계속 별도 범위다.
 
 처음 만드는 프로젝트는 Core, Infrastructure, Host, Tests 네 개다. Interop·NativeInspection·IntegrationTests는 M2, Contracts·Client는 M4에 추가한다. Runner는 한 건의 단계 순서, M3의 Engine은 접수·중복 차단·상태·자동 반복을 담당한다. Logging은 M1부터 RunId를 포함해 시작하고 M5에서 조회·진단을 다듬는다.
 

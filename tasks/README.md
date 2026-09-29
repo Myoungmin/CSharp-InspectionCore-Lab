@@ -14,7 +14,7 @@
 | [M5 — 저장·진단](M05-storage-diagnostics.md) | Verified | [M5 실습](../docs/practice-M05.md), 필수 181개·실제 SQLite 재시작/검색·장애 진단·전체 검증 통과 |
 | [M6 — C++/CLI 비교](M06-cpp-cli-comparison.md) | Verified | [M6 실습](../docs/practice-M06.md), 필수 217개·실제 혼합 DLL/IPC/저장·종료·누락/publish·전체 검증 통과 |
 | [DEV02 — 전체 구성 검토](DEV02-architecture-review.md) | Verified | M0~M6 경계·완료 범위와 제어기/CI/운영 검토, .NET 10 보류, 기존 217개·전체 검증 통과 |
-| [DEV03 — Windows CI](DEV03-windows-ci.md) | InProgress | B04, 고정 환경의 전체 검증과 성공·실패 증거 보관 |
+| [DEV03 — Windows CI](DEV03-windows-ci.md) | Verified | B04, 로컬·새 원격 runner의 217개 통과, 의도한 CI 실패와 성공/실패 artifact 확인 |
 
 ## 공통 완료 기준
 

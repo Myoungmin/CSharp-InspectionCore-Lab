@@ -10,6 +10,8 @@
 
 setup-dotnet은 global.json의 SDK 9.0.305를 준비한다. prepare-ci.ps1은 기존 Native/C++/CLI 도구와 Java 11을 검사하고 기존 PlantUML 해시와 일치하는 Maven Central JAR를 준비한다. GitHub 배포 JAR와 Maven JAR는 같은 버전이어도 바이트가 다르므로 버전명만 비교하지 않는다. Java는 runner의 JAVA_HOME_11_X64를 우선 사용하고 로컬에서는 PATH의 Java 11도 허용한다.
 
+MSVC는 toolset 폴더 14.44.35207을 고정하고 실제 compiler 파일 버전도 증거에 남긴다. 같은 폴더의 servicing 버전과 Java 11의 patch 버전까지 동일하게 고정한 것은 아니다. 실제 원격 도구 버전과 이미지 버전은 DEV03의 성공 실행 기록을 참고한다.
+
 로컬에서 동일 진입점을 확인할 수 있다. 기존 설치를 업그레이드하지 않으며 사전 검사에 필요한 JAR만 artifacts/ci-tools에 다운로드한다.
 
 ```powershell

@@ -101,7 +101,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify.ps1
 - [문서 유지 규칙](docs/documentation-rules.md)
 - [전체 단계와 Codex 루프 설계](InspectionLab-Architecture-and-Codex-Loop.md)
 
-M0~M6의 기능 구현·검증 단계는 완료했다. 2026-09-29 사용자 요청에 따라 .NET 10 이전(B01)은 필요할 때 별도 착수하며 현재 SDK/대상을 유지한다. 다음 활동은 전체 구조·계약 검토와 직접 실습이다. B04는 Windows CI 구성을 추가했으며 실제 원격 확인 상태는 DEV03 작업에 기록한다. Codex 자동 반복 제어기(B03), 편집 규칙(B05), 장기 운영(B08)은 미구현 후속 작업이며 M0~M6 완료와 구분한다. 사용자 학습 완료도 별도로 확인한다.
+M0~M6의 기능 구현·검증 단계는 완료했다. 2026-09-29 사용자 요청에 따라 .NET 10 이전(B01)은 필요할 때 별도 착수하며 현재 SDK/대상을 유지한다. 전체 구조·계약 검토는 DEV02에 기록했다. B04 Windows CI는 새 원격 runner에서 217개 통과와 의도한 실패·증거 보관까지 확인했으며 실제 실행 링크는 [DEV03](tasks/DEV03-windows-ci.md)에 있다. main 통합·필수 상태 검사 설정은 별도다. Codex 자동 반복 제어기(B03), 편집 규칙(B05), 장기 운영(B08)은 미구현 후속 작업이며 M0~M6 완료와 구분한다. 사용자 직접 실습·학습 완료도 별도로 확인한다.
 
 Native Wait 실패로 종료를 확인하지 못하면 자원을 보존하고 같은 엔진의 재접수를 거절하며 복구는 Host 재시작으로 수행한다. IPC의 시작 재전송 보장은 Host 수명 안으로 한정한다. 실제 배포의 지원 정책이나 도구 호환성 요구가 생기면 [보류 목록](docs/backlog.md)의 조건으로 전환을 재검토한다.
 
